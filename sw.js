@@ -1,4 +1,4 @@
-const CACHE = 'wariplan-v8';
+const CACHE = 'wariplan-v10';
 const FILES = [
   './',
   'index.html',
