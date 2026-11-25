@@ -217,7 +217,7 @@
     <div id="avert" class="msg"></div>
     <h3>Nouvelle dépense</h3>
     <input id="desc" placeholder="Description (ex: Taxi)" maxlength="200">
-    <input id="montant" type="number" inputmode="numeric" placeholder="Montant en FCFA">
+    <input id="montant" type="number" step="any" inputmode="decimal" placeholder="Montant en FCFA">
     <input id="date" type="date">
     <select id="cat"></select>
     <button class="btn clair" id="nv-cat">+ Ajouter une rubrique</button>
@@ -232,7 +232,7 @@
   <div id="p-bud" class="page cache">
     <div class="carte">
       <h3>Définir le budget du mois</h3>
-      <input id="b-val" type="number" inputmode="numeric" placeholder="Budget en FCFA">
+      <input id="b-val" type="number" step="any" inputmode="decimal" placeholder="Budget en FCFA">
       <button class="btn" id="b-ok">Enregistrer le budget</button>
     </div>
     <div id="stats-bud" class="pile"></div>
@@ -304,6 +304,11 @@
       <button class="btn clair" id="p-prenom-ok">Enregistrer le prénom</button>
     </div>
     <div class="carte">
+      <h3>Devise de l’application</h3>
+      <p class="note">Choisissez la devise affichée pour vos budgets et dépenses.</p>
+      <select id="p-devise"></select>
+    </div>
+    <div class="carte">
       <h3>Mes données</h3>
       <button class="btn clair" id="p-pol">Lire la politique de confidentialité</button>
       <button class="btn clair" id="p-supprimer" style="color:#c62828;border-color:#c62828">Supprimer mon compte et mes données</button>
@@ -352,7 +357,7 @@
 <ul>
   <li><b>Votre compte :</b> prénom, adresse e-mail et mot de passe. Le mot de passe n’est jamais enregistré en clair : il est transformé de façon irréversible par le service d’authentification.</li>
   <li><b>Ce que vous saisissez :</b> vos dépenses (description, montant, rubrique, date), vos budgets du mois, vos budgets par rubrique et vos rubriques personnalisées.</li>
-  <li><b>Vos préférences :</b> couleur de l’interface, couleurs des rubriques et photo de profil (facultative, réduite avant d’être enregistrée dans votre profil).</li>
+  <li><b>Vos préférences :</b> couleur de l’interface, devise sélectionnée, couleurs des rubriques et photo de profil (facultative, réduite avant d’être enregistrée dans votre profil).</li>
   <li><b>Vos réclamations :</b> sujet, message, adresse e-mail et réponse du support.</li>
   <li><b>Votre acceptation :</b> la version et la date d’acceptation de cette politique.</li>
   <li><b>Des données techniques :</b> pour assurer la connexion et la sécurité, l’hébergeur peut enregistrer des informations techniques, comme l’adresse IP et l’heure de connexion.</li>
@@ -445,6 +450,15 @@
   const POLITIQUE_VERSION = '2026-11-20';
   const CATS_DEFAUT = ['Transport', 'Nourriture', 'Factures', 'Santé', 'Loisirs', 'Épargne', 'Famille', 'Autre'];
   const NOMS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  // Devises disponibles
+  const DEVISES = {
+    XOF: { code: 'XOF', nom: 'Franc CFA (FCFA)', symbole: 'FCFA', unite: 'FCFA', dec: 0, avant: false, locale: 'fr-FR' },
+    USD: { code: 'USD', nom: 'Dollar américain ($ US)', symbole: '$', unite: 'USD', dec: 2, avant: true, locale: 'en-US' },
+    EUR: { code: 'EUR', nom: 'Euro (€)', symbole: '€', unite: 'EUR', dec: 2, avant: false, locale: 'fr-FR' },
+    INR: { code: 'INR', nom: 'Roupie indienne (₹)', symbole: '₹', unite: 'INR', dec: 2, avant: true, locale: 'en-IN' }
+  };
+
   // Couleurs des rubriques (sans vert, jaune ni rouge : réservés à l'état du budget)
   const PALETTE_RUB = [
     { nom: 'Bleu', hex: '#1565c0' }, { nom: 'Bleu ciel', hex: '#29b6f6' }, { nom: 'Turquoise', hex: '#00acc1' },
@@ -481,11 +495,38 @@
   // ---------- Outils ----------
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const fcfa = n => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
   const pad = n => String(n).padStart(2, '0');
   const dateFr = s => s.split('-').reverse().join('/');
   const libMois = m => NOMS[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4);
   const nouvelId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+
+  function infoDevise() {
+    const code = (d && d.devise && DEVISES[d.devise]) ? d.devise : 'XOF';
+    return DEVISES[code];
+  }
+  function formaterNombre(n, dev) {
+    const val = Number(n) || 0;
+    const estEntier = dev.dec === 0 || Number.isInteger(Math.round(val * 100) / 100);
+    return val.toLocaleString(dev.locale, {
+      minimumFractionDigits: estEntier ? 0 : dev.dec,
+      maximumFractionDigits: dev.dec
+    });
+  }
+  function argent(n) {
+    const dev = infoDevise();
+    const val = Number(n) || 0;
+    const neg = val < 0;
+    const absStr = formaterNombre(Math.abs(val), dev);
+    const signe = neg ? '−' : '';
+    return dev.avant ? (signe + dev.symbole + absStr) : (signe + absStr + ' ' + dev.symbole);
+  }
+  function lireMontant(texte) {
+    const s = String(texte || '').trim().replace(',', '.');
+    const v = parseFloat(s);
+    if (isNaN(v)) return NaN;
+    const dev = infoDevise();
+    return dev.dec === 0 ? Math.round(v) : Math.round(v * 100) / 100;
+  }
 
   const LS = {
     get(k, def) { try { const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } },
@@ -529,8 +570,12 @@
   construirePalette();
   appliquerTheme(localStorage.getItem('theme') || 'vert');
 
+  // Remplir le menu des devises
+  $('p-devise').innerHTML = Object.keys(DEVISES).map(k =>
+    '<option value="' + k + '">' + esc(DEVISES[k].nom) + '</option>'
+  ).join('');
+
   // ---------- Etat ----------
-  // Lecture de l'adresse AVANT de créer le client (lien de récupération)
   let enRecuperation = /type=recovery/.test(location.hash);
   const lienExpire = /error_code=|error=access_denied/.test(location.hash);
 
@@ -542,7 +587,7 @@
   let mois = aujourdhui().slice(0, 7);
   let sync = false, syncDemandee = false;
   let rubOuverte = null;
-  let rubEdition = null;   // { nom, valeur } : rubrique dont on modifie le budget
+  let rubEdition = null;
   let focusRub = false;
 
   // Couleur d'une rubrique : celle choisie par l'utilisateur, sinon une couleur par défaut
@@ -688,7 +733,6 @@
   $('deco').onclick = async () => {
     if (queue.length && !confirm('Certaines saisies ne sont pas encore envoyées au serveur. Si vous vous déconnectez maintenant, elles seront perdues. Continuer ?')) return;
     const uid = user && user.id;
-    // « local » : ne déconnecte que cet appareil, pas vos autres appareils
     await sb.auth.signOut({ scope: 'local' });
     if (uid) nettoyerLocal(uid);
     $('a-pass').value = ''; $('a-pass2').value = '';
@@ -762,7 +806,7 @@
 
   // ---------- Profil (local + serveur) ----------
   function sauverProfilLocal() {
-    if (user && d) LS.set('p_' + user.id, { prenom: d.prenom, cats: d.cats, theme: d.theme, avatar: d.avatar, couleurs: d.couleurs });
+    if (user && d) LS.set('p_' + user.id, { prenom: d.prenom, cats: d.cats, theme: d.theme, avatar: d.avatar, couleurs: d.couleurs, devise: d.devise });
   }
   function patchEnAttente() {
     const p = {};
@@ -777,17 +821,19 @@
     if (s.theme && !('theme' in p)) d.theme = s.theme;
     if (!('avatar' in p)) d.avatar = s.avatar || null;
     if (!('couleurs' in p)) d.couleurs = s.couleurs || {};
+    if (s.devise && DEVISES[s.devise] && !('devise' in p)) d.devise = s.devise;
   }
   async function chargerProfil() {
     if (!navigator.onLine || !user) return;
     const uid = user.id;
     try {
-      const { data, error } = await sb.from('profils').select('prenom,cats,theme,avatar,couleurs').eq('id', uid).maybeSingle();
+      const { data, error } = await sb.from('profils').select('prenom,cats,theme,avatar,couleurs,devise').eq('id', uid).maybeSingle();
       if (error) throw error;
       if (!user || user.id !== uid) return;
       appliquerProfilServeur(data);
       sauverProfilLocal();
       appliquerTheme(d.theme);
+      $('p-devise').value = d.devise;
       salut(); majAvatar(); tout();
     } catch (e) { if (!estReseau(e)) erreur(e); }
   }
@@ -926,10 +972,10 @@
       if (r3.error) throw r3.error;
       if (!user || user.id !== uid) return;
       const br = {};
-      r3.data.forEach(x => { br[x.rubrique] = x.montant; });
+      r3.data.forEach(x => { br[x.rubrique] = Number(x.montant); });
       LS.set('c_' + uid + '_' + m, {
-        depenses: r1.data.map(x => ({ id: x.id, cid: x.cid || null, desc: x.description, montant: x.montant, cat: x.rubrique, date: x.date })),
-        budget: r2.data ? r2.data.montant : null,
+        depenses: r1.data.map(x => ({ id: x.id, cid: x.cid || null, desc: x.description, montant: Number(x.montant), cat: x.rubrique, date: x.date })),
+        budget: r2.data ? Number(r2.data.montant) : null,
         budrub: br
       });
     } catch (e) { if (!estReseau(e)) erreur(e); }
@@ -952,7 +998,6 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { salut(); actualiser(); } });
   setInterval(() => { if (user && queue.length) synchroniser(); }, 20000);
 
-  // ---------- Session ----------
   // ---------- Politique de confidentialité ----------
   let accordEnAttente = null;
   function consentementOk(u) {
@@ -990,7 +1035,7 @@
     await sb.auth.signOut({ scope: 'local' });
   };
 
-  // Suppression du compte et de toutes les données (fonction SQL « supprimer_mon_compte »)
+  // Suppression du compte et de toutes les données
   $('p-supprimer').onclick = async () => {
     if (!user) return;
     if (!navigator.onLine) { alert('Une connexion internet est nécessaire pour supprimer votre compte.'); return; }
@@ -1025,12 +1070,14 @@
       theme: pc.theme || localStorage.getItem('theme') || 'vert',
       avatar: pc.avatar || null,
       couleurs: pc.couleurs || {},
+      devise: (pc.devise && DEVISES[pc.devise]) ? pc.devise : 'XOF',
       depenses: [], budget: 0, budrub: {}
     };
     Object.assign(d, patchEnAttente());
     mois = aujourdhui().slice(0, 7);
     $('date').value = aujourdhui();
     $('p-compte').textContent = u.email || '';
+    $('p-devise').value = d.devise;
     ecran('app');
     onglet('dep');
     appliquerTheme(d.theme);
@@ -1055,7 +1102,10 @@
     if (d) {
       tout();
       if (n === 'aide') chargerReclamations();
-      if (n === 'profil') $('p-prenom').value = d.prenom || '';
+      if (n === 'profil') {
+        $('p-prenom').value = d.prenom || '';
+        $('p-devise').value = d.devise || 'XOF';
+      }
     }
   }
   ['dep', 'bud', 'ana', 'rap', 'aide'].forEach(x => { $('n-' + x).onclick = () => onglet(x); });
@@ -1073,10 +1123,10 @@
 
   // ---------- Affichage ----------
   const catsListe = () => CATS_DEFAUT.concat(d.cats);
-  const totalMois = () => d.depenses.reduce((s, x) => s + x.montant, 0);
+  const totalMois = () => Math.round(d.depenses.reduce((s, x) => s + Number(x.montant), 0) * 100) / 100;
   function parCat(l) {
     const r = {};
-    l.forEach(x => { r[x.cat] = (r[x.cat] || 0) + x.montant; });
+    l.forEach(x => { r[x.cat] = Math.round(((r[x.cat] || 0) + Number(x.montant)) * 100) / 100; });
     return r;
   }
 
@@ -1092,39 +1142,42 @@
   function tout() {
     if (!d) return;
     majVue();
+    const dev = infoDevise();
     $('mois-lib').textContent = libMois(mois);
-    const b = d.budget, t = totalMois(), r = b - t;
+    const b = d.budget, t = totalMois(), r = Math.round((b - t) * 100) / 100;
     const st = statutBudget(b, t);
     const pct = b > 0 ? t / b * 100 : 0;
     const par = parCat(d.depenses);
 
+    $('montant').placeholder = 'Montant en ' + dev.unite;
+    $('b-val').placeholder = 'Budget de ' + libMois(mois) + ' en ' + dev.unite;
+
     $('stats-dep').innerHTML =
-      '<div class="stat s-' + st + '"><small>Budget</small><b>' + fcfa(b) + '</b></div>' +
-      '<div class="stat"><small>Dépensé</small><b>' + fcfa(t) + '</b></div>' +
-      '<div class="stat s-' + st + '"><small>Reste</small><b>' + fcfa(r) + '</b></div>';
+      '<div class="stat s-' + st + '"><small>Budget</small><b>' + argent(b) + '</b></div>' +
+      '<div class="stat"><small>Dépensé</small><b>' + argent(t) + '</b></div>' +
+      '<div class="stat s-' + st + '"><small>Reste</small><b>' + argent(r) + '</b></div>';
     $('jauge-dep').className = 'jauge s-' + st;
     $('jauge-dep').innerHTML = b > 0
       ? '<div class="barre"><i style="width:' + Math.min(100, pct) + '%"></i></div><small>' + Math.round(pct) + ' % du budget utilisé</small>' : '';
 
     $('stats-bud').innerHTML =
-      '<div class="stat grand s-' + st + '"><small>Budget de ' + libMois(mois) + '</small><b>' + fcfa(b) + '</b></div>' +
-      '<div class="stat grand s-' + st + '"><small>Reste</small><b>' + fcfa(r) + '</b>' +
+      '<div class="stat grand s-' + st + '"><small>Budget de ' + libMois(mois) + '</small><b>' + argent(b) + '</b></div>' +
+      '<div class="stat grand s-' + st + '"><small>Reste</small><b>' + argent(r) + '</b>' +
       (b > 0 ? '<div class="jauge" style="margin-top:6px"><div class="barre"><i style="width:' + Math.min(100, pct) + '%"></i></div><small>' + Math.round(pct) + ' % utilisé</small></div>' : '') +
-      '<small style="margin-top:4px">Dépensé : ' + fcfa(t) + '</small></div>';
+      '<small style="margin-top:4px">Dépensé : ' + argent(t) + '</small></div>';
 
     let av = '', avCl = 'msg';
     if (b === 0) av = 'Définissez votre budget dans l’onglet Budget.';
-    else if (st === 'rouge') { av = 'Attention : budget dépassé de ' + fcfa(-r) + '.'; avCl = 'msg s-rouge'; }
+    else if (st === 'rouge') { av = 'Attention : budget dépassé de ' + argent(-r) + '.'; avCl = 'msg s-rouge'; }
     else if (st === 'jaune') { av = 'Attention : ' + Math.round(pct) + ' % de votre budget est déjà utilisé.'; avCl = 'msg s-jaune'; }
     $('avert').className = avCl;
     $('avert').textContent = av;
-    $('b-val').placeholder = 'Budget de ' + libMois(mois) + ' en FCFA';
 
     const l = catsListe();
     remplirSelect($('cat'), l, '');
     remplirSelect($('filtre'), l, 'Toutes les rubriques');
 
-    $('resume').innerHTML = Object.keys(par).map(k => '<div class="chip"><i class="pt" style="background:' + couleurRub(k) + '"></i>' + esc(k) + ' : <b>' + fcfa(par[k]) + '</b></div>').join('')
+    $('resume').innerHTML = Object.keys(par).map(k => '<div class="chip"><i class="pt" style="background:' + couleurRub(k) + '"></i>' + esc(k) + ' : <b>' + argent(par[k]) + '</b></div>').join('')
       || '<div class="note">Aucune dépense ce mois-ci.</div>';
 
     const fl = $('filtre').value;
@@ -1132,7 +1185,7 @@
     $('liste').innerHTML = lignes.length ? lignes.map(x =>
       '<li><span>' + esc(x.desc) + '<small>' + dateFr(x.date) + '</small><span class="tag"><i class="pt" style="background:' + couleurRub(x.cat) + '"></i>' + esc(x.cat) + '</span>' +
       (x.attente ? '<span class="attente" title="En attente d’envoi">⏳</span>' : '') + '</span>' +
-      '<div><span class="montant">' + fcfa(x.montant) + '</span>' +
+      '<div><span class="montant">' + argent(x.montant) + '</span>' +
       '<button class="sup" onclick="supprimer(\'' + (x.cid || '') + '\',' + (x.id === null ? 'null' : x.id) + ')">✕</button></div></li>'
     ).join('') : '<div class="vide">Aucune dépense</div>';
 
@@ -1143,9 +1196,9 @@
         d.cats.map((x, i) => '<span class="tag"><i class="pt" style="background:' + couleurRub(x) + '"></i>' + esc(x) + '<button class="sup" onclick="supprimerCat(' + i + ')">✕</button></span>').join(' ') : '');
 
     $('rap-contenu').innerHTML = '<h3>' + libMois(mois) + '</h3>' +
-      '<p>Budget : <b>' + fcfa(b) + '</b></p><p>Dépensé : <b>' + fcfa(t) + '</b></p><p>Reste : <b>' + fcfa(r) + '</b></p>' +
+      '<p>Budget : <b>' + argent(b) + '</b></p><p>Dépensé : <b>' + argent(t) + '</b></p><p>Reste : <b>' + argent(r) + '</b></p>' +
       '<p>Nombre de dépenses : <b>' + d.depenses.length + '</b></p>' +
-      (Object.keys(par).length ? '<hr>' + Object.keys(par).map(k => '<p>' + esc(k) + ' : <b>' + fcfa(par[k]) + '</b></p>').join('') : '');
+      (Object.keys(par).length ? '<hr>' + Object.keys(par).map(k => '<p>' + esc(k) + ' : <b>' + argent(par[k]) + '</b></p>').join('') : '');
 
     if (!$('p-ana').classList.contains('cache')) renderAnalyse(par);
   }
@@ -1161,7 +1214,7 @@
       const bud = d.budrub[nom] || 0;
       somme += bud;
       const dep = par[nom] || 0;
-      const reste = bud - dep;
+      const reste = Math.round((bud - dep) * 100) / 100;
       const pct = bud > 0 ? Math.min(100, dep / bud * 100) : 0;
       const st = statutBudget(bud, dep);
       const col = couleurRub(nom);
@@ -1169,18 +1222,19 @@
       return '<div class="rep s-' + st + '"><div class="rep-top">' +
         '<button class="pastille" data-c="' + esc(nom) + '" style="background:' + col + '" aria-label="Changer la couleur de ' + esc(nom) + '"></button>' +
         '<span>' + esc(nom) + '</span>' +
-        '<span class="rep-montant">' + (bud > 0 ? fcfa(bud) : 'Non défini') + '</span>' +
+        '<span class="rep-montant">' + (bud > 0 ? argent(bud) : 'Non défini') + '</span>' +
         '<button class="crayon" data-r="' + esc(nom) + '" aria-label="Modifier le budget de ' + esc(nom) + '">✏️</button></div>' +
-        (edition ? '<div class="rep-edit"><input class="rep-in" type="number" inputmode="numeric" placeholder="Nouveau montant" value="' + esc(rubEdition.valeur) + '">' +
+        (edition ? '<div class="rep-edit"><input class="rep-in" type="number" step="any" inputmode="decimal" placeholder="Nouveau montant" value="' + esc(rubEdition.valeur) + '">' +
           '<button class="ok-rub" aria-label="Valider">✔</button><button class="annuler-rub" aria-label="Annuler">✕</button></div>' +
           '<small class="apercu">' + apercuRub(nom, rubEdition.valeur) + '</small>' : '') +
         (rubOuverte === nom ? miniPalette(nom, col) : '') +
         (bud > 0 ? '<div class="barre"><i style="width:' + pct + '%"></i></div>' : '') +
-        '<small>Dépensé : ' + fcfa(dep) + (bud > 0 ? ' · Reste : <b>' + fcfa(reste) + '</b>' : '') + '</small></div>';
+        '<small>Dépensé : ' + argent(dep) + (bud > 0 ? ' · Reste : <b>' + argent(reste) + '</b>' : '') + '</small></div>';
     }).join('');
     const b = d.budget;
-    $('rep-total').innerHTML = 'Réparti : <b>' + fcfa(somme) + '</b>' +
-      (b ? ' sur ' + fcfa(b) + ' (non réparti : <b class="' + (b - somme < 0 ? 'rouge' : '') + '">' + fcfa(b - somme) + '</b>)' : '');
+    const nonRep = Math.round((b - somme) * 100) / 100;
+    $('rep-total').innerHTML = 'Réparti : <b>' + argent(somme) + '</b>' +
+      (b ? ' sur ' + argent(b) + ' (non réparti : <b class="' + (nonRep < 0 ? 'rouge' : '') + '">' + argent(nonRep) + '</b>)' : '');
     if (focusRub) {
       focusRub = false;
       const champ = $('rep-liste').querySelector('.rep-in');
@@ -1196,19 +1250,19 @@
     if (general <= 0) general = sommeApres;
     else if (ancien > 0 && v > 0) general = general + (v - ancien);
     else general = Math.max(general, sommeApres);
-    return Math.max(0, general);
+    return Math.max(0, Math.round(general * 100) / 100);
   }
   function apercuRub(nom, texte) {
     const t = String(texte).trim();
     if (t === '') return 'Laissez vide pour retirer le budget de cette rubrique.';
-    const v = parseInt(t, 10);
+    const v = lireMontant(t);
     if (isNaN(v) || v < 0) return 'Saisissez un montant valide.';
     const nouveau = calculerNouveauBudget(nom, v);
-    const diff = nouveau - d.budget;
+    const diff = Math.round((nouveau - d.budget) * 100) / 100;
     const t0 = totalMois();
-    return 'Budget général : ' + fcfa(d.budget) + ' → <b>' + fcfa(nouveau) + '</b>' +
-      (diff ? ' (' + (diff > 0 ? '+' : '−') + fcfa(Math.abs(diff)) + ')' : ' (inchangé)') +
-      '<br>Reste : ' + fcfa(d.budget - t0) + ' → <b>' + fcfa(nouveau - t0) + '</b>';
+    return 'Budget général : ' + argent(d.budget) + ' → <b>' + argent(nouveau) + '</b>' +
+      (diff ? ' (' + (diff > 0 ? '+' : '−') + argent(Math.abs(diff)) + ')' : ' (inchangé)') +
+      '<br>Reste : ' + argent(d.budget - t0) + ' → <b>' + argent(nouveau - t0) + '</b>';
   }
   function quitterChamp() {
     const a = document.activeElement;
@@ -1218,7 +1272,7 @@
     if (!rubEdition) return;
     const nom = rubEdition.nom;
     const t = String(rubEdition.valeur).trim();
-    const v = t === '' ? 0 : parseInt(t, 10);
+    const v = t === '' ? 0 : lireMontant(t);
     if (isNaN(v) || v < 0) { alert('Saisissez un montant valide.'); return; }
     quitterChamp();
     const nouveau = calculerNouveauBudget(nom, v);
@@ -1272,21 +1326,22 @@
 
   // ---------- Analyse ----------
   function donut(par, total) {
+    const dev = infoDevise();
     const cles = Object.keys(par).sort((a, b) => par[b] - par[a]);
     let cum = 0;
     const R = 15.9155;
-    const arcs = cles.map((k, i) => {
+    const arcs = cles.map(k => {
       const p = par[k] / total * 100;
       const s = '<circle r="' + R + '" cx="21" cy="21" fill="transparent" stroke="' + couleurRub(k) +
         '" stroke-width="6" stroke-dasharray="' + p + ' ' + (100 - p) + '" stroke-dashoffset="' + (25 - cum) + '"></circle>';
       cum += p;
       return s;
     }).join('');
-    const legende = cles.map((k, i) =>
-      '<div><i style="background:' + couleurRub(k) + '"></i><span>' + esc(k) + '</span><b>' + fcfa(par[k]) + '</b><small>' + Math.round(par[k] / total * 100) + ' %</small></div>').join('');
+    const legende = cles.map(k =>
+      '<div><i style="background:' + couleurRub(k) + '"></i><span>' + esc(k) + '</span><b>' + argent(par[k]) + '</b><small>' + Math.round(par[k] / total * 100) + ' %</small></div>').join('');
     return '<svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Répartition des dépenses par rubrique">' + arcs +
-      '<text x="21" y="21.5" text-anchor="middle" font-size="4" font-weight="bold" fill="#222">' + Math.round(total).toLocaleString('fr-FR') + '</text>' +
-      '<text x="21" y="26" text-anchor="middle" font-size="2.8" fill="#777">FCFA</text></svg>' +
+      '<text x="21" y="21.5" text-anchor="middle" font-size="3.6" font-weight="bold" fill="#222">' + formaterNombre(total, dev) + '</text>' +
+      '<text x="21" y="26" text-anchor="middle" font-size="2.8" fill="#777">' + esc(dev.symbole) + '</text></svg>' +
       '<div class="legende">' + legende + '</div>';
   }
 
@@ -1311,7 +1366,7 @@
     const b = bornes(mois);
     const nbJ = Math.round((new Date(b[1]) - new Date(b[0])) / 86400000);
     const jours = new Array(nbJ).fill(0);
-    l.forEach(x => { const j = +x.date.slice(8, 10) - 1; if (j >= 0 && j < nbJ) jours[j] += x.montant; });
+    l.forEach(x => { const j = +x.date.slice(8, 10) - 1; if (j >= 0 && j < nbJ) jours[j] += Number(x.montant); });
     const ecoules = mois === aujourdhui().slice(0, 7) ? +aujourdhui().slice(8, 10) : nbJ;
     const plusGrosse = l.reduce((m, x) => x.montant > m.montant ? x : m, l[0]);
     const top = Object.keys(par).sort((a, c) => par[c] - par[a])[0];
@@ -1319,24 +1374,24 @@
     const bud = d.budget;
     $('ana-contenu').innerHTML =
       '<div class="carte"><h3>Analyse de ' + libMois(mois) + '</h3>' +
-      '<p>Total dépensé : <b>' + fcfa(t) + '</b> (' + n + ' dépense' + (n > 1 ? 's' : '') + ')</p>' +
-      '<p>Moyenne par jour : <b>' + fcfa(t / ecoules) + '</b></p>' +
+      '<p>Total dépensé : <b>' + argent(t) + '</b> (' + n + ' dépense' + (n > 1 ? 's' : '') + ')</p>' +
+      '<p>Moyenne par jour : <b>' + argent(t / ecoules) + '</b></p>' +
       '<p>Rubrique principale : <b>' + esc(top) + '</b> (' + Math.round(par[top] / t * 100) + ' %)</p>' +
-      '<p>Plus grosse dépense : <b>' + fcfa(plusGrosse.montant) + '</b> · ' + esc(plusGrosse.desc) + '</p>' +
+      '<p>Plus grosse dépense : <b>' + argent(plusGrosse.montant) + '</b> · ' + esc(plusGrosse.desc) + '</p>' +
       (bud > 0 ? '<div class="jauge s-' + statutBudget(bud, t) + '"><small>Budget utilisé : ' + Math.round(t / bud * 100) + ' %</small>' +
         '<div class="barre"><i style="width:' + Math.min(100, t / bud * 100) + '%"></i></div></div>' : '') +
       '</div>' +
       '<div class="carte"><h3>Répartition par rubrique</h3>' + donut(par, t) + '</div>' +
       '<div class="carte"><h3>Dépenses par jour</h3>' + barresJours(jours) +
-      '<p class="note">Jour le plus chargé : le ' + jMax + ' (' + fcfa(jours[jMax - 1]) + ')</p></div>';
+      '<p class="note">Jour le plus chargé : le ' + jMax + ' (' + argent(jours[jMax - 1]) + ')</p></div>';
   }
 
   // ---------- Actions ----------
   $('ajout').onclick = () => {
     const desc = $('desc').value.trim();
-    const m = parseInt($('montant').value, 10);
+    const m = lireMontant($('montant').value);
     const date = $('date').value || aujourdhui();
-    if (!desc || !m || m <= 0) { alert('Saisissez une description et un montant valide.'); return; }
+    if (!desc || isNaN(m) || m <= 0) { alert('Saisissez une description et un montant valide.'); return; }
     $('desc').value = ''; $('montant').value = ''; $('date').value = aujourdhui();
     mois = date.slice(0, 7);
     ajouterOp({ op: 'add', cid: nouvelId(), description: desc, montant: m, rubrique: $('cat').value, date: date });
@@ -1354,7 +1409,7 @@
   }
 
   $('b-ok').onclick = () => {
-    const v = parseInt($('b-val').value, 10);
+    const v = lireMontant($('b-val').value);
     if (isNaN(v) || v < 0) { alert('Saisissez un budget valide.'); return; }
     $('b-val').value = '';
     ajouterOp({ op: 'bud', mois: mois, montant: v });
@@ -1383,7 +1438,7 @@
     ajouterOp({ op: 'prof', patch: { cats: d.cats.slice() } });
   }
 
-  // ---------- Profil : photo, prénom, couleurs ----------
+  // ---------- Profil : photo, prénom, devise, couleurs ----------
   $('p-photo').onclick = () => $('p-fichier').click();
   $('p-fichier').onchange = async () => {
     const f = $('p-fichier').files[0];
@@ -1408,6 +1463,14 @@
     sauverProfilLocal(); salut(); majAvatar();
     ajouterOp({ op: 'prof', patch: { prenom: p } });
   };
+  $('p-devise').onchange = () => {
+    const code = $('p-devise').value;
+    if (!DEVISES[code] || !d) return;
+    d.devise = code;
+    sauverProfilLocal();
+    tout();
+    ajouterOp({ op: 'prof', patch: { devise: code } });
+  };
   function choisirTheme(e) {
     const b = e.target.closest('.sw');
     if (!b || !d) return;
@@ -1431,6 +1494,7 @@
 
   $('rap-dl').onclick = () => {
     majVue();
+    const dev = infoDevise();
     const l = d.depenses.slice().sort((a, b) => a.date.localeCompare(b.date));
     const b = d.budget, t = totalMois(), par = parCat(l);
     const cel = v => {
@@ -1445,15 +1509,16 @@
       ['Rapport mensuel - WariPlan'],
       ['Utilisateur', (d.prenom || '') + ' (' + (user.email || '') + ')'],
       ['Mois', libMois(mois)],
-      ['Budget (FCFA)', b],
-      ['Total dépensé (FCFA)', t],
-      ['Reste (FCFA)', b - t],
+      ['Devise', dev.nom],
+      ['Budget (' + dev.unite + ')', b],
+      ['Total dépensé (' + dev.unite + ')', t],
+      ['Reste (' + dev.unite + ')', Math.round((b - t) * 100) / 100],
       [],
-      ['Date', 'Description', 'Rubrique', 'Montant (FCFA)']
+      ['Date', 'Description', 'Rubrique', 'Montant (' + dev.unite + ')']
     ].concat(
       l.map(x => [dateFr(x.date), x.desc, x.cat, x.montant]),
-      [[], ['Rubrique', 'Budget (FCFA)', 'Dépensé (FCFA)', 'Reste (FCFA)']],
-      noms.filter(k => par[k] || d.budrub[k]).map(k => [k, d.budrub[k] || 0, par[k] || 0, (d.budrub[k] || 0) - (par[k] || 0)])
+      [[], ['Rubrique', 'Budget (' + dev.unite + ')', 'Dépensé (' + dev.unite + ')', 'Reste (' + dev.unite + ')']],
+      noms.filter(k => par[k] || d.budrub[k]).map(k => [k, d.budrub[k] || 0, par[k] || 0, Math.round(((d.budrub[k] || 0) - (par[k] || 0)) * 100) / 100])
     );
     const csv = lignes.map(r => r.map(cel).join(';')).join('\r\n');
     telecharger('rapport-' + mois + '.csv', csv);
