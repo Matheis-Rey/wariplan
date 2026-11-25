@@ -1,14 +1,13 @@
 {
   "name": "WariPlan — Planifie ton mois, maîtrise chaque dépense",
   "short_name": "WariPlan",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/wariplan/",
+  "scope": "/wariplan/",
   "display": "standalone",
   "background_color": "#f2f4f3",
   "theme_color": "#0a7d3b",
   "icons": [
-    {"src": "./assets/wariplan-icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "./assets/wariplan-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+    {"src": "/wariplan/wariplan-icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/wariplan/wariplan-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
   ]
 }
- 
