@@ -27,12 +27,10 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
 
-  // Bibliothèque Supabase : servie depuis le cache pour fonctionner hors connexion
   if (url.href === LIB) {
     e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
     return;
   }
-  // Tout ce qui n'est pas sur ce site (données Supabase, Wave...) passe directement par le réseau
   if (url.origin !== location.origin) return;
 
   e.respondWith(
