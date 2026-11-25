@@ -1,8 +1,8 @@
 {
   "name": "WariPlan — Planifie ton mois, maîtrise chaque dépense",
   "short_name": "WariPlan",
-  "start_url": "/wariplan/",
-  "scope": "/wariplan/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f2f4f3",
   "theme_color": "#0a7d3b",
