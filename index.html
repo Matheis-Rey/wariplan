@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WariPlan — Planifie ton mois, maîtrise chaque dépense</title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/wariplan-icon.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/wariplan-icon.png">
+<link rel="apple-touch-icon" href="/wariplan-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="WariPlan">
 <meta name="theme-color" content="#0a7d3b">
 <style>
   :root { --prim: #0a7d3b; --fond: #0a7d3b; --clair: #e3f4ea; }
@@ -140,7 +146,7 @@
 <!-- ===== CONNEXION ===== -->
 <div id="auth" class="page cache">
   <h2 style="text-align:center;color:var(--prim);margin-top:24px">WariPlan</h2>
-  <p class="note" style="text-align:center">Votre compte fonctionne sur tous vos appareils.</p>
+  <p class="note" style="text-align:center">Planifie ton mois, maîtrise chaque dépense. Votre compte fonctionne sur tous vos appareils.</p>
   <div class="onglets">
     <button id="t-con" class="actif">Connexion</button>
     <button id="t-ins">Créer un compte</button>
@@ -190,4 +196,1322 @@
 <!-- ===== APPLICATION ===== -->
 <div id="app" class="cache">
   <header>
-    <button id="h-avatar" class="avatar" aria-label="Mon profil"></button
+    <button id="h-avatar" class="avatar" aria-label="Mon profil"></button>
+    <div class="h-txt"><small id="h-salut">Bonjour</small><b id="h-nom"></b></div>
+    <button id="deco">Déconnexion</button>
+  </header>
+  <div id="etat" class="etat cache"></div>
+
+  <div id="barre-mois" class="page" style="padding-bottom:0">
+    <div class="mois">
+      <button id="m-prec" aria-label="Mois précédent">‹</button>
+      <b id="mois-lib"></b>
+      <button id="m-suiv" aria-label="Mois suivant">›</button>
+    </div>
+  </div>
+
+  <!-- Onglet Dépenses -->
+  <div id="p-dep" class="page">
+    <div id="stats-dep" class="grille"></div>
+    <div id="jauge-dep" class="jauge"></div>
+    <div id="avert" class="msg"></div>
+    <h3>Nouvelle dépense</h3>
+    <input id="desc" placeholder="Description (ex: Taxi)" maxlength="200">
+    <input id="montant" type="number" inputmode="numeric" placeholder="Montant en FCFA">
+    <input id="date" type="date">
+    <select id="cat"></select>
+    <button class="btn clair" id="nv-cat">+ Ajouter une rubrique</button>
+    <button class="btn" id="ajout">Ajouter la dépense</button>
+    <h3>Résumé par rubrique</h3>
+    <div id="resume" class="puces"></div>
+    <select id="filtre"></select>
+    <ul id="liste"></ul>
+  </div>
+
+  <!-- Onglet Budget -->
+  <div id="p-bud" class="page cache">
+    <div class="carte">
+      <h3>Définir le budget du mois</h3>
+      <input id="b-val" type="number" inputmode="numeric" placeholder="Budget en FCFA">
+      <button class="btn" id="b-ok">Enregistrer le budget</button>
+    </div>
+    <div id="stats-bud" class="pile"></div>
+    <div class="carte">
+      <h3>Répartition par rubrique</h3>
+      <p class="note">Facultatif : fixez un budget pour chaque rubrique. Touchez ✏️ pour modifier le budget d’une rubrique : le budget général et le reste sont recalculés. Touchez la pastille pour changer sa couleur (reprise dans les graphiques).</p>
+      <div id="rep-liste"></div>
+      <p id="rep-total" class="note"></p>
+    </div>
+    <div class="carte">
+      <h3>Mes rubriques</h3>
+      <div id="rub-liste"></div>
+      <input id="rub-nom" placeholder="Nouvelle rubrique (ex: Éducation)" maxlength="20">
+      <button class="btn clair" id="rub-ok">Ajouter la rubrique</button>
+    </div>
+  </div>
+
+  <!-- Onglet Analyse -->
+  <div id="p-ana" class="page cache">
+    <div id="ana-contenu" class="pile"></div>
+  </div>
+
+  <!-- Onglet Rapport -->
+  <div id="p-rap" class="page cache">
+    <div id="rap-contenu" class="carte"></div>
+    <button class="btn" id="rap-dl">Télécharger le rapport du mois</button>
+    <p class="note">Le fichier (format CSV) s’ouvre avec Excel, Google Sheets ou WPS Office.</p>
+  </div>
+
+  <!-- Onglet Aide -->
+  <div id="p-aide" class="page cache">
+    <div class="carte">
+      <h3>Envoyer une réclamation</h3>
+      <input id="rec-sujet" placeholder="Sujet" maxlength="100">
+      <textarea id="rec-msg" placeholder="Décrivez votre problème ou votre demande" maxlength="2000"></textarea>
+      <button class="btn" id="rec-ok">Envoyer la réclamation</button>
+    </div>
+    <div class="carte">
+      <h3>Mes réclamations</h3>
+      <div id="rec-liste"></div>
+    </div>
+    <div class="carte">
+      <h3>Contacter le support</h3>
+      <a class="btn" id="aide-wa" target="_blank" rel="noopener">Écrire sur WhatsApp</a>
+      <a class="btn clair" id="aide-mail">Envoyer un e-mail</a>
+    </div>
+    <div class="carte">
+      <h3>Questions fréquentes</h3>
+      <p><b>Mes données sont-elles partagées ?</b><br>Non : elles ne sont ni vendues, ni partagées, ni divulguées à des tiers. Vous pouvez lire la politique complète depuis votre profil.</p>
+      <p><b>Où sont mes données ?</b><br>Dans votre compte, en ligne. Connectez-vous avec le même e-mail sur un autre appareil pour les retrouver.</p>
+      <p><b>Et sans connexion internet ?</b><br>Vous pouvez saisir vos dépenses et votre budget. Ils sont envoyés automatiquement dès que le réseau revient.</p>
+      <p><b>J’ai oublié mon mot de passe</b><br>Sur l’écran de connexion, touchez « Mot de passe oublié ? » et suivez le lien reçu par e-mail.</p>
+      <p><b>Le budget ne change pas ?</b><br>C’est voulu : le budget reste fixe, et c’est la ligne « Reste » qui diminue à chaque dépense.</p>
+    </div>
+  </div>
+
+  <!-- Page Profil -->
+  <div id="p-profil" class="page cache">
+    <div class="carte">
+      <div id="p-avatar" class="avatar grand"></div>
+      <input id="p-fichier" type="file" accept="image/*" class="cache">
+      <button class="btn clair" id="p-photo">Choisir une photo</button>
+      <button class="lien" id="p-photo-sup">Supprimer la photo</button>
+      <p class="note" id="p-compte" style="text-align:center"></p>
+    </div>
+    <div class="carte">
+      <h3>Mon prénom</h3>
+      <input id="p-prenom" maxlength="30" placeholder="Votre prénom">
+      <button class="btn clair" id="p-prenom-ok">Enregistrer le prénom</button>
+    </div>
+    <div class="carte">
+      <h3>Mes données</h3>
+      <button class="btn clair" id="p-pol">Lire la politique de confidentialité</button>
+      <button class="btn clair" id="p-supprimer" style="color:#c62828;border-color:#c62828">Supprimer mon compte et mes données</button>
+    </div>
+    <div class="carte">
+      <h3>Couleur de l’application</h3>
+      <p class="note">Couleurs unies</p>
+      <div id="pal-uni" class="palette"></div>
+      <p class="note">Dégradés</p>
+      <div id="pal-deg" class="palette"></div>
+    </div>
+  </div>
+
+  <nav>
+    <button id="n-dep" class="actif">💸<br>Dépenses</button>
+    <button id="n-bud">🎯<br>Budget</button>
+    <button id="n-ana">📊<br>Analyse</button>
+    <button id="n-rap">📄<br>Rapport</button>
+    <button id="n-aide">🛟<br>Aide</button>
+  </nav>
+</div>
+
+<!-- Politique de confidentialité (fenêtre de lecture) -->
+<div id="pol" class="pol cache" role="dialog" aria-modal="true" aria-label="Politique de confidentialité">
+  <div class="pol-in">
+    <div class="pol-tete"><b>Politique de confidentialité</b><button id="pol-fermer" aria-label="Fermer">✕</button></div>
+    <div class="pol-corps">
+<p class="pol-date">Version du 20 novembre 2026</p>
+<p>Cette politique explique quelles données l’application <b>WariPlan</b> collecte, pourquoi, comment elles sont protégées et quels sont vos droits. En créant un compte, vous déclarez l’avoir lue et vous l’acceptez.</p>
+
+<div class="pol-resume">
+  <b>En résumé</b>
+  <ul>
+    <li>Vos données servent uniquement à faire fonctionner l’application pour vous.</li>
+    <li>Elles ne sont ni vendues, ni louées, ni partagées, ni divulguées à des tiers.</li>
+    <li>Aucune publicité, aucun suivi publicitaire.</li>
+    <li>Vous pouvez supprimer votre compte et toutes vos données à tout moment.</li>
+  </ul>
+  <small>Les seules exceptions, strictement limitées, sont décrites à l’article 5.</small>
+</div>
+
+<h3>1. Qui est responsable de vos données ?</h3>
+<p>L’application « WariPlan » est éditée par <b>Wilfried DJEDJE</b>, à Abidjan (Côte d’Ivoire). Pour toute question sur vos données : <b>armandzpassur@gmail.com</b> ou WhatsApp au <b>+225 07 09 04 76 68</b>.</p>
+
+<h3>2. Quelles données collectons-nous ?</h3>
+<ul>
+  <li><b>Votre compte :</b> prénom, adresse e-mail et mot de passe. Le mot de passe n’est jamais enregistré en clair : il est transformé de façon irréversible par le service d’authentification.</li>
+  <li><b>Ce que vous saisissez :</b> vos dépenses (description, montant, rubrique, date), vos budgets du mois, vos budgets par rubrique et vos rubriques personnalisées.</li>
+  <li><b>Vos préférences :</b> couleur de l’interface, couleurs des rubriques et photo de profil (facultative, réduite avant d’être enregistrée dans votre profil).</li>
+  <li><b>Vos réclamations :</b> sujet, message, adresse e-mail et réponse du support.</li>
+  <li><b>Votre acceptation :</b> la version et la date d’acceptation de cette politique.</li>
+  <li><b>Des données techniques :</b> pour assurer la connexion et la sécurité, l’hébergeur peut enregistrer des informations techniques, comme l’adresse IP et l’heure de connexion.</li>
+</ul>
+<p>Nous n’accédons ni à votre position, ni à vos contacts, ni à votre micro, ni à votre appareil photo (en dehors de la photo de profil que vous choisissez vous-même). Nous ne collectons aucune donnée bancaire : ni numéro de carte, ni numéro de compte.</p>
+
+<h3>3. Pourquoi utilisons-nous ces données ?</h3>
+<ul>
+  <li>Créer et sécuriser votre compte.</li>
+  <li>Enregistrer, calculer et afficher vos budgets, dépenses, graphiques et rapports.</li>
+  <li>Retrouver les mêmes informations sur tous vos appareils.</li>
+  <li>Vous envoyer l’e-mail de récupération de mot de passe.</li>
+  <li>Répondre à vos réclamations et vous aider.</li>
+  <li>Assurer la sécurité et le bon fonctionnement de l’application.</li>
+</ul>
+<p>Nous n’utilisons jamais vos données pour de la publicité, du profilage ou de la revente.</p>
+
+<h3>4. Sur quelle base ?</h3>
+<p>Le traitement de vos données repose sur votre consentement (l’acceptation de la présente politique) et sur ce qui est nécessaire pour vous fournir le service que vous avez demandé.</p>
+
+<h3>5. Vos données sont-elles partagées ?</h3>
+<p><b>Non.</b> Vos données ne sont ni vendues, ni louées, ni partagées, ni divulguées à des tiers à des fins commerciales, publicitaires ou autres. Les seules exceptions sont les suivantes :</p>
+<ul>
+  <li><b>Les prestataires techniques</b> qui font fonctionner l’application pour notre compte, et uniquement pour cela : <b>Supabase</b> (stockage des données et authentification), <b>Google / Gmail</b> (envoi de l’e-mail de récupération de mot de passe), <b>GitHub Pages</b> (hébergement de l’application) et <b>jsDelivr</b> (diffusion d’un composant de l’application). Ils peuvent stocker ou traiter des données sur des serveurs situés en dehors de la Côte d’Ivoire.</li>
+  <li><b>Une obligation légale :</b> une demande officielle d’une autorité judiciaire ou administrative compétente.</li>
+  <li><b>Les liens externes que vous choisissez d’ouvrir</b> : le bouton « Don » (Wave), WhatsApp ou votre messagerie. Ces services appliquent leurs propres règles, et l’application ne leur transmet aucune de vos données.</li>
+</ul>
+<p><b>Accès par l’éditeur.</b> En tant qu’administrateur technique, l’éditeur peut techniquement accéder aux données stockées. Il ne le fait que pour le support (par exemple pour traiter une réclamation), la sécurité et la maintenance, et s’interdit de consulter vos données à d’autres fins.</p>
+
+<h3>6. Comment vos données sont-elles protégées ?</h3>
+<ul>
+  <li>Les échanges sont chiffrés (HTTPS).</li>
+  <li>Les mots de passe sont protégés et illisibles, y compris pour l’éditeur.</li>
+  <li>Chaque compte est isolé : des règles d’accès au niveau de la base de données empêchent un utilisateur de voir ou de modifier les données d’un autre.</li>
+  <li>Pour fonctionner sans connexion internet, l’application garde une copie de vos données sur votre appareil. Elle est effacée quand vous vous déconnectez.</li>
+</ul>
+<p>Aucun système n’est totalement infaillible. Protégez votre appareil et ne communiquez jamais votre mot de passe. Si une faille affectait vos données, nous vous en informerions dans les meilleurs délais.</p>
+
+<h3>7. Combien de temps les conservons-nous ?</h3>
+<p>Tant que votre compte existe. Si vous supprimez votre compte, vos données (profil, dépenses, budgets, réclamations) sont supprimées immédiatement et définitivement. Les éventuelles copies techniques de l’hébergeur sont effacées selon ses propres délais.</p>
+
+<h3>8. Quels sont vos droits ?</h3>
+<ul>
+  <li><b>Accès :</b> toutes vos données sont visibles dans l’application, et le rapport mensuel peut être téléchargé.</li>
+  <li><b>Rectification :</b> vous pouvez modifier votre prénom, vos dépenses, vos budgets et vos rubriques à tout moment.</li>
+  <li><b>Suppression et retrait du consentement :</b> dans la page Profil, bouton « Supprimer mon compte et mes données ».</li>
+  <li><b>Copie de vos données :</b> sur simple demande à l’adresse de contact ci-dessus.</li>
+</ul>
+<p>Nous répondons à toute demande dans un délai maximum de 30 jours. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir l’autorité ivoirienne chargée de la protection des données personnelles (ARTCI).</p>
+
+<h3>9. Mineurs</h3>
+<p>L’application est destinée aux personnes en âge de gérer leur budget. Un mineur doit l’utiliser avec l’accord de son parent ou de son représentant légal.</p>
+
+<h3>10. Stockage sur votre appareil</h3>
+<p>L’application n’utilise aucun cookie publicitaire ni outil de suivi. Elle enregistre sur votre appareil des informations techniques nécessaires à son fonctionnement : votre session, vos préférences et, pour le mode hors connexion, une copie de vos données.</p>
+
+<h3>11. Dons</h3>
+<p>Les dons sont libres et facultatifs. Le paiement est géré entièrement par Wave : l’application ne reçoit ni ne conserve aucune donnée de paiement.</p>
+
+<h3>12. Modifications de cette politique</h3>
+<p>Cette politique peut évoluer. La date de version figure en haut de la page. En cas de changement important, une nouvelle acceptation vous sera demandée.</p>
+
+<h3>13. Contact</h3>
+<p>Une question, une demande ? <b>armandzpassur@gmail.com</b> · WhatsApp <b>+225 07 09 04 76 68</b>, ou le formulaire de réclamation de l’onglet Aide.</p>
+
+    </div>
+  </div>
+</div>
+
+<!-- Bouton don -->
+<a id="don" target="_blank" rel="noopener">❤️ Don</a>
+
+<script>
+  if (!window.supabase) {
+    document.body.innerHTML = '<p style="padding:24px;font-family:sans-serif">Une connexion internet est nécessaire pour charger l’application. Réessayez.</p>';
+    throw new Error('Bibliothèque Supabase non chargée');
+  }
+
+  // ====== VOS INFORMATIONS ======
+  const CONFIG = {
+    SUPABASE_URL: 'https://tnwngndobavpacluedkn.supabase.co',
+    SUPABASE_KEY: 'sb_publishable_0E2DKak7vl-NKUvU9mcH6A_KcOVsKsR',
+    SITE: 'https://matheis-rey.github.io/depense/',
+    WAVE: 'https://pay.wave.com/m/M_ci_1Fw9ZLtLUwO0/c/ci/',
+    WHATSAPP: '2250709047668',
+    EMAIL: 'armandzpassur@gmail.com'
+  };
+  // ==============================
+
+  const POLITIQUE_VERSION = '2026-11-20';
+  const CATS_DEFAUT = ['Transport', 'Nourriture', 'Factures', 'Santé', 'Loisirs', 'Épargne', 'Famille', 'Autre'];
+  const NOMS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  // Couleurs des rubriques (sans vert, jaune ni rouge : réservés à l'état du budget)
+  const PALETTE_RUB = [
+    { nom: 'Bleu', hex: '#1565c0' }, { nom: 'Bleu ciel', hex: '#29b6f6' }, { nom: 'Turquoise', hex: '#00acc1' },
+    { nom: 'Indigo', hex: '#3949ab' }, { nom: 'Violet', hex: '#8e24aa' }, { nom: 'Lavande', hex: '#b39ddb' },
+    { nom: 'Rose', hex: '#ec407a' }, { nom: 'Prune', hex: '#ad1457' }, { nom: 'Orange', hex: '#ef6c00' },
+    { nom: 'Marron', hex: '#6d4c41' }, { nom: 'Gris', hex: '#78909c' }, { nom: 'Charbon', hex: '#263238' }
+  ];
+  const DEFAUT_RUB = { 'Transport': '#1565c0', 'Nourriture': '#ef6c00', 'Factures': '#3949ab', 'Santé': '#ec407a',
+                       'Loisirs': '#8e24aa', 'Épargne': '#00acc1', 'Famille': '#6d4c41', 'Autre': '#78909c' };
+  const LIBRES_RUB = ['#29b6f6', '#ad1457', '#b39ddb', '#263238'];
+  const STATUTS = { nouveau: 'Nouveau', en_cours: 'En cours', resolu: 'Résolu' };
+
+  const THEMES = [
+    { id: 'vert',      nom: 'Vert',      prim: '#0a7d3b' },
+    { id: 'emeraude',  nom: 'Émeraude',  prim: '#00796b' },
+    { id: 'turquoise', nom: 'Turquoise', prim: '#00838f' },
+    { id: 'bleu',      nom: 'Bleu',      prim: '#1565c0' },
+    { id: 'indigo',    nom: 'Indigo',    prim: '#3949ab' },
+    { id: 'violet',    nom: 'Violet',    prim: '#7b1fa2' },
+    { id: 'prune',     nom: 'Prune',     prim: '#ad1457' },
+    { id: 'rose',      nom: 'Rose',      prim: '#d81b60' },
+    { id: 'rouge',     nom: 'Rouge',     prim: '#c62828' },
+    { id: 'orange',    nom: 'Orange',    prim: '#e65100' },
+    { id: 'marron',    nom: 'Marron',    prim: '#6d4c41' },
+    { id: 'ardoise',   nom: 'Ardoise',   prim: '#455a64' },
+    { id: 'aurore',    nom: 'Aurore',    prim: '#0a7d3b', fond: 'linear-gradient(135deg,#0a7d3b,#00acc1)' },
+    { id: 'coucher',   nom: 'Coucher de soleil', prim: '#d84315', fond: 'linear-gradient(135deg,#ff6f00,#d81b60)' },
+    { id: 'ocean',     nom: 'Océan',     prim: '#1565c0', fond: 'linear-gradient(135deg,#1565c0,#00acc1)' },
+    { id: 'lavande',   nom: 'Lavande',   prim: '#5e35b1', fond: 'linear-gradient(135deg,#7b1fa2,#3949ab)' },
+    { id: 'foret',     nom: 'Forêt',     prim: '#2e7d32', fond: 'linear-gradient(135deg,#1b5e20,#7cb342)' },
+    { id: 'braise',    nom: 'Braise',    prim: '#c62828', fond: 'linear-gradient(135deg,#b71c1c,#ff8f00)' }
+  ];
+
+  // ---------- Outils ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fcfa = n => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
+  const pad = n => String(n).padStart(2, '0');
+  const dateFr = s => s.split('-').reverse().join('/');
+  const libMois = m => NOMS[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4);
+  const nouvelId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+
+  const LS = {
+    get(k, def) { try { const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+
+  function aujourdhui() {
+    const t = new Date();
+    return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate());
+  }
+  function bornes(m) {
+    let a = +m.slice(0, 4), n = +m.slice(5, 7) + 1;
+    if (n > 12) { n = 1; a++; }
+    return [m + '-01', a + '-' + pad(n) + '-01'];
+  }
+
+  // ---------- Thèmes ----------
+  function melanger(hex, t) {
+    const n = parseInt(hex.slice(1), 16);
+    const f = v => Math.round(v + (255 - v) * t);
+    return 'rgb(' + f((n >> 16) & 255) + ',' + f((n >> 8) & 255) + ',' + f(n & 255) + ')';
+  }
+  function appliquerTheme(id) {
+    const t = THEMES.find(x => x.id === id) || THEMES[0];
+    const s = document.documentElement.style;
+    s.setProperty('--prim', t.prim);
+    s.setProperty('--fond', t.fond || t.prim);
+    s.setProperty('--clair', melanger(t.prim, 0.88));
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t.prim);
+    try { localStorage.setItem('theme', t.id); } catch (e) {}
+    document.querySelectorAll('.sw').forEach(b => b.classList.toggle('sel', b.dataset.t === t.id));
+  }
+  function construirePalette() {
+    const html = list => list.map(t =>
+      '<button class="sw" data-t="' + t.id + '" title="' + esc(t.nom) + '" aria-label="' + esc(t.nom) + '" style="background:' + (t.fond || t.prim) + '"></button>').join('');
+    $('pal-uni').innerHTML = html(THEMES.filter(t => !t.fond));
+    $('pal-deg').innerHTML = html(THEMES.filter(t => t.fond));
+  }
+  construirePalette();
+  appliquerTheme(localStorage.getItem('theme') || 'vert');
+
+  // ---------- Etat ----------
+  // Lecture de l'adresse AVANT de créer le client (lien de récupération)
+  let enRecuperation = /type=recovery/.test(location.hash);
+  const lienExpire = /error_code=|error=access_denied/.test(location.hash);
+
+  const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
+    auth: { flowType: 'implicit', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+
+  let user = null, d = null, queue = [];
+  let mois = aujourdhui().slice(0, 7);
+  let sync = false, syncDemandee = false;
+  let rubOuverte = null;
+  let rubEdition = null;   // { nom, valeur } : rubrique dont on modifie le budget
+  let focusRub = false;
+
+  // Couleur d'une rubrique : celle choisie par l'utilisateur, sinon une couleur par défaut
+  function couleurRub(nom) {
+    const c = d && d.couleurs && d.couleurs[nom];
+    if (c && PALETTE_RUB.some(p => p.hex === c)) return c;
+    if (DEFAUT_RUB[nom]) return DEFAUT_RUB[nom];
+    const i = d ? d.cats.indexOf(nom) : -1;
+    return i < 0 ? '#78909c' : LIBRES_RUB[i % LIBRES_RUB.length];
+  }
+  // État du budget : vert jusqu'à 75 %, jaune de 76 à 100 %, rouge au-delà
+  function statutBudget(b, t) {
+    if (b <= 0) return 'neutre';
+    const p = t / b * 100;
+    return p <= 75 ? 'vert' : (p <= 100 ? 'jaune' : 'rouge');
+  }
+
+  // ---------- Bouton œil (afficher / masquer le mot de passe) ----------
+  const ICONE_OEIL = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const ICONE_OEIL_BARRE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+  function reglerOeil(bouton, visible) {
+    const champ = $(bouton.dataset.pour);
+    champ.type = visible ? 'text' : 'password';
+    bouton.innerHTML = visible ? ICONE_OEIL_BARRE : ICONE_OEIL;
+    bouton.setAttribute('aria-label', visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+  }
+  document.querySelectorAll('.oeil').forEach(b => {
+    reglerOeil(b, false);
+    b.addEventListener('click', () => reglerOeil(b, $(b.dataset.pour).type === 'password'));
+  });
+  function masquerMotsDePasse() { document.querySelectorAll('.oeil').forEach(b => reglerOeil(b, false)); }
+
+  function ecran(n) {
+    ['chargement', 'auth', 'accord', 'nouveau', 'app'].forEach(x => $(x).classList.toggle('cache', x !== n));
+    if (n !== 'auth' && n !== 'nouveau') masquerMotsDePasse();
+  }
+
+  function estReseau(e) {
+    const m = ((e && e.message) || '').toLowerCase();
+    return !navigator.onLine || m.includes('failed to fetch') || m.includes('network') || m.includes('load failed') || m.includes('fetch') || m.includes('jwt');
+  }
+  function traduire(e) {
+    const m = ((e && e.message) || '').toLowerCase();
+    if (m.includes('invalid login')) return 'E-mail ou mot de passe incorrect.';
+    if (m.includes('already registered') || m.includes('already been registered')) return 'Un compte existe déjà avec cet e-mail.';
+    if (m.includes('rate limit') || m.includes('too many') || m.includes('security purposes')) return 'Trop de tentatives. Réessayez dans quelques minutes.';
+    if (m.includes('password should be')) return 'Mot de passe trop court (6 caractères minimum).';
+    if (m.includes('not authorized')) return 'L’envoi d’e-mails n’est pas encore activé pour cette adresse. Contactez le support.';
+    if (m.includes('failed to fetch') || m.includes('network') || m.includes('load failed')) return 'Pas de connexion internet. Réessayez.';
+    return 'Une erreur est survenue : ' + ((e && e.message) || 'inconnue');
+  }
+  function erreur(e) { alert(traduire(e)); }
+
+  // ---------- Connexion / inscription / mot de passe oublié ----------
+  let mode = 'con';
+  function modeAuth(m) {
+    mode = m;
+    $('a-prenom').classList.toggle('cache', m !== 'ins');
+    $('w-pass').classList.toggle('cache', m === 'oubli');
+    $('w-pass2').classList.toggle('cache', m !== 'ins');
+    $('w-accord').classList.toggle('cache', m !== 'ins');
+    $('a-oubli').classList.toggle('cache', m !== 'con');
+    $('a-retour').classList.toggle('cache', m !== 'oubli');
+    $('a-ok').textContent = { con: 'Se connecter', ins: 'Créer mon compte', oubli: 'Envoyer le lien' }[m];
+    $('t-con').classList.toggle('actif', m !== 'ins');
+    $('t-ins').classList.toggle('actif', m === 'ins');
+    $('a-msg').textContent = '';
+    $('a-info').textContent = '';
+  }
+  $('t-con').onclick = () => modeAuth('con');
+  $('t-ins').onclick = () => modeAuth('ins');
+  $('a-oubli').onclick = () => modeAuth('oubli');
+  $('a-retour').onclick = () => modeAuth('con');
+
+  $('a-ok').onclick = async () => {
+    const mail = $('a-mail').value.trim().toLowerCase();
+    const mdp = $('a-pass').value;
+    const msg = t => { $('a-msg').textContent = t; $('a-info').textContent = ''; };
+    msg('');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) { msg('Saisissez une adresse e-mail valide.'); return; }
+    if (mode !== 'oubli' && mdp.length < 6) { msg('Mot de passe : 6 caractères minimum.'); return; }
+    let prenom = '';
+    if (mode === 'ins') {
+      prenom = $('a-prenom').value.trim();
+      if (prenom.length < 2) { msg('Saisissez votre prénom.'); return; }
+      if (mdp !== $('a-pass2').value) { msg('Les deux mots de passe sont différents.'); return; }
+      if (!$('a-accord').checked) { msg('Vous devez accepter la politique de confidentialité pour créer un compte.'); return; }
+    }
+    if (!navigator.onLine) { msg('Une connexion internet est nécessaire pour se connecter.'); return; }
+    $('a-ok').disabled = true;
+    try {
+      if (mode === 'oubli') {
+        const { error } = await sb.auth.resetPasswordForEmail(mail, { redirectTo: CONFIG.SITE });
+        if (error) throw error;
+        $('a-info').textContent = 'Si cette adresse a un compte, un e-mail avec un lien vient d’être envoyé. Pensez à regarder dans les courriers indésirables.';
+      } else if (mode === 'ins') {
+        const { data, error } = await sb.auth.signUp({ email: mail, password: mdp, options: { data: { prenom: prenom, politique_version: POLITIQUE_VERSION, politique_date: new Date().toISOString() } } });
+        if (error) throw error;
+        if (!data.session) $('a-info').textContent = 'Compte créé. Vérifiez votre e-mail pour confirmer votre adresse.';
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email: mail, password: mdp });
+        if (error) throw error;
+      }
+    } catch (e) {
+      msg(traduire(e));
+    }
+    $('a-ok').disabled = false;
+  };
+
+  // Nouveau mot de passe (après le lien reçu par e-mail)
+  $('n-ok').onclick = async () => {
+    const p = $('n-pass').value;
+    const msg = $('n-msg');
+    msg.textContent = '';
+    if (p.length < 6) { msg.textContent = 'Mot de passe : 6 caractères minimum.'; return; }
+    if (p !== $('n-pass2').value) { msg.textContent = 'Les deux mots de passe sont différents.'; return; }
+    $('n-ok').disabled = true;
+    const { error } = await sb.auth.updateUser({ password: p });
+    $('n-ok').disabled = false;
+    if (error) { msg.textContent = traduire(error); return; }
+    enRecuperation = false;
+    history.replaceState(null, '', location.pathname);
+    $('n-pass').value = ''; $('n-pass2').value = '';
+    const { data } = await sb.auth.getSession();
+    if (data.session) ouvrirSession(data.session.user);
+    alert('Votre mot de passe a été modifié.');
+  };
+  $('n-annuler').onclick = async () => {
+    enRecuperation = false;
+    history.replaceState(null, '', location.pathname);
+    await sb.auth.signOut({ scope: 'local' });
+  };
+
+  function nettoyerLocal(uid) {
+    try {
+      Object.keys(localStorage)
+        .filter(k => k.indexOf('c_' + uid + '_') === 0 || k === 'q_' + uid || k === 'p_' + uid)
+        .forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+  }
+
+  $('deco').onclick = async () => {
+    if (queue.length && !confirm('Certaines saisies ne sont pas encore envoyées au serveur. Si vous vous déconnectez maintenant, elles seront perdues. Continuer ?')) return;
+    const uid = user && user.id;
+    // « local » : ne déconnecte que cet appareil, pas vos autres appareils
+    await sb.auth.signOut({ scope: 'local' });
+    if (uid) nettoyerLocal(uid);
+    $('a-pass').value = ''; $('a-pass2').value = '';
+  };
+
+  sb.auth.onAuthStateChange((event, session) => {
+    setTimeout(() => {
+      if (event === 'PASSWORD_RECOVERY' || (enRecuperation && session)) {
+        enRecuperation = true;
+        ecran('nouveau');
+        return;
+      }
+      if (session && session.user) {
+        if (!user || user.id !== session.user.id) ouvrirSession(session.user);
+      } else {
+        user = null; d = null; queue = [];
+        ecran('auth');
+      }
+    }, 0);
+  });
+
+  // ---------- Salutation et avatar ----------
+  function salut() {
+    const h = new Date().getHours();
+    let s = 'Bonsoir 🌙';
+    if (h >= 5 && h < 12) s = 'Bonjour ☀️';
+    else if (h >= 12 && h < 18) s = 'Bon après-midi 🌤️';
+    let nom = d && d.prenom ? d.prenom.trim() : '';
+    nom = nom ? nom.charAt(0).toUpperCase() + nom.slice(1) : 'WariPlan';
+    $('h-salut').textContent = s;
+    $('h-nom').textContent = nom;
+  }
+  setInterval(() => { if (user && d) salut(); }, 60000);
+
+  function majAvatar() {
+    const ok = d && d.avatar && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(d.avatar);
+    const lettre = (d && d.prenom ? d.prenom.trim().charAt(0).toUpperCase() : '') || '?';
+    ['h-avatar', 'p-avatar'].forEach(id => {
+      const el = $(id);
+      el.textContent = '';
+      if (ok) {
+        const img = new Image();
+        img.alt = '';
+        img.src = d.avatar;
+        el.appendChild(img);
+      } else {
+        el.textContent = lettre;
+      }
+    });
+  }
+
+  function traiterPhoto(fichier) {
+    return new Promise((ok, ko) => {
+      const url = URL.createObjectURL(fichier);
+      const img = new Image();
+      img.onload = () => {
+        const T = 160;
+        const c = document.createElement('canvas');
+        c.width = c.height = T;
+        const s = Math.min(img.width, img.height);
+        c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, T, T);
+        URL.revokeObjectURL(url);
+        let q = 0.8, data = c.toDataURL('image/jpeg', q);
+        while (data.length > 50000 && q > 0.3) { q -= 0.1; data = c.toDataURL('image/jpeg', q); }
+        ok(data);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); ko(new Error('Image illisible')); };
+      img.src = url;
+    });
+  }
+
+  // ---------- Profil (local + serveur) ----------
+  function sauverProfilLocal() {
+    if (user && d) LS.set('p_' + user.id, { prenom: d.prenom, cats: d.cats, theme: d.theme, avatar: d.avatar, couleurs: d.couleurs });
+  }
+  function patchEnAttente() {
+    const p = {};
+    queue.forEach(o => { if (o.op === 'prof') Object.assign(p, o.patch); });
+    return p;
+  }
+  function appliquerProfilServeur(s) {
+    if (!s) return;
+    const p = patchEnAttente();
+    if (s.prenom && !('prenom' in p)) d.prenom = s.prenom;
+    if (!('cats' in p)) d.cats = s.cats || [];
+    if (s.theme && !('theme' in p)) d.theme = s.theme;
+    if (!('avatar' in p)) d.avatar = s.avatar || null;
+    if (!('couleurs' in p)) d.couleurs = s.couleurs || {};
+  }
+  async function chargerProfil() {
+    if (!navigator.onLine || !user) return;
+    const uid = user.id;
+    try {
+      const { data, error } = await sb.from('profils').select('prenom,cats,theme,avatar,couleurs').eq('id', uid).maybeSingle();
+      if (error) throw error;
+      if (!user || user.id !== uid) return;
+      appliquerProfilServeur(data);
+      sauverProfilLocal();
+      appliquerTheme(d.theme);
+      salut(); majAvatar(); tout();
+    } catch (e) { if (!estReseau(e)) erreur(e); }
+  }
+
+  // ---------- File d'attente (mode hors connexion) ----------
+  function sauverQueue() { if (user) LS.set('q_' + user.id, queue); }
+
+  function majEtat() {
+    const e = $('etat');
+    const n = queue.length;
+    if (!navigator.onLine) {
+      e.textContent = 'Hors connexion' + (n ? ' · ' + n + ' saisie(s) en attente d’envoi' : ' · vos saisies seront envoyées au retour du réseau');
+      e.classList.remove('cache');
+    } else if (n) {
+      e.textContent = sync ? 'Synchronisation en cours…' : n + ' saisie(s) en attente d’envoi';
+      e.classList.remove('cache');
+    } else {
+      e.classList.add('cache');
+    }
+  }
+
+  function ajouterOp(o) {
+    if (o.op === 'prof') {
+      const ex = queue.find((x, i) => x.op === 'prof' && !(sync && i === 0));
+      if (ex) Object.assign(ex.patch, o.patch); else queue.push(o);
+    } else if (o.op === 'bud') {
+      queue = queue.filter(x => !(x.op === 'bud' && x.mois === o.mois));
+      queue.push(o);
+    } else if (o.op === 'brub') {
+      queue = queue.filter(x => !(x.op === 'brub' && x.mois === o.mois && x.rubrique === o.rubrique));
+      queue.push(o);
+    } else {
+      queue.push(o);
+    }
+    sauverQueue();
+    tout();
+    majEtat();
+    synchroniser();
+  }
+
+  function lireCache(m) { return user ? LS.get('c_' + user.id + '_' + m, null) : null; }
+
+  function calculerVue(m) {
+    const base = lireCache(m) || { depenses: [], budget: null, budrub: {} };
+    let deps = base.depenses.slice();
+    let budget = base.budget;
+    const br = Object.assign({}, base.budrub);
+    queue.forEach(o => {
+      if (o.op === 'add') {
+        if (o.date.slice(0, 7) === m && !deps.some(x => x.cid && x.cid === o.cid)) {
+          deps.push({ id: null, cid: o.cid, desc: o.description, montant: o.montant, cat: o.rubrique, date: o.date, attente: true });
+        }
+      } else if (o.op === 'del') {
+        deps = deps.filter(x => !((o.cid && x.cid === o.cid) || (o.id !== null && o.id !== undefined && x.id === o.id)));
+      } else if (o.op === 'bud' && o.mois === m) {
+        budget = o.montant;
+      } else if (o.op === 'brub' && o.mois === m) {
+        if (o.montant === null) delete br[o.rubrique]; else br[o.rubrique] = o.montant;
+      }
+    });
+    deps.sort((a, b) => b.date.localeCompare(a.date) || ((b.id || 9e15) - (a.id || 9e15)));
+    return { depenses: deps, budget: budget || 0, budrub: br };
+  }
+
+  function majVue() {
+    if (!user || !d) return;
+    const v = calculerVue(mois);
+    d.depenses = v.depenses; d.budget = v.budget; d.budrub = v.budrub;
+  }
+
+  async function executer(o, uid) {
+    try {
+      let r;
+      if (o.op === 'add') {
+        r = await sb.from('depenses').upsert(
+          { user_id: uid, cid: o.cid, description: o.description, montant: o.montant, rubrique: o.rubrique, date: o.date },
+          { onConflict: 'user_id,cid', ignoreDuplicates: true });
+      } else if (o.op === 'del') {
+        r = o.cid ? await sb.from('depenses').delete().eq('cid', o.cid)
+                  : await sb.from('depenses').delete().eq('id', o.id);
+      } else if (o.op === 'bud') {
+        r = await sb.from('budgets').upsert({ user_id: uid, mois: o.mois, montant: o.montant }, { onConflict: 'user_id,mois' });
+      } else if (o.op === 'brub') {
+        r = o.montant === null
+          ? await sb.from('budgets_rub').delete().eq('mois', o.mois).eq('rubrique', o.rubrique)
+          : await sb.from('budgets_rub').upsert({ user_id: uid, mois: o.mois, rubrique: o.rubrique, montant: o.montant }, { onConflict: 'user_id,mois,rubrique' });
+      } else if (o.op === 'prof') {
+        r = await sb.from('profils').upsert(Object.assign({ id: uid }, o.patch), { onConflict: 'id' });
+      } else {
+        return null;
+      }
+      return r.error || null;
+    } catch (e) { return e; }
+  }
+
+  async function synchroniser() {
+    if (!user || !queue.length || !navigator.onLine) return;
+    if (sync) { syncDemandee = true; return; }
+    sync = true;
+    const uid = user.id;
+    const echecs = [];
+    majEtat();
+    try {
+      while (queue.length) {
+        if (!user || user.id !== uid) break;
+        const o = queue[0];
+        const err = await executer(o, uid);
+        if (err && estReseau(err)) break;
+        if (err) echecs.push(traduire(err));
+        queue = queue.filter(x => x !== o);
+        sauverQueue();
+      }
+    } finally {
+      sync = false;
+    }
+    majEtat();
+    if (echecs.length) alert('Certaines saisies n’ont pas pu être enregistrées :\n' + echecs[0]);
+    if (user && user.id === uid) {
+      if (!queue.length) await rafraichir(); else tout();
+    }
+    if (syncDemandee) { syncDemandee = false; synchroniser(); }
+  }
+
+  async function rafraichir() {
+    if (!user || !navigator.onLine) return;
+    const m = mois, uid = user.id, b = bornes(m);
+    try {
+      const r1 = await sb.from('depenses')
+        .select('id,cid,description,montant,rubrique,date')
+        .gte('date', b[0]).lt('date', b[1])
+        .order('date', { ascending: false }).order('id', { ascending: false }).limit(1000);
+      if (r1.error) throw r1.error;
+      const r2 = await sb.from('budgets').select('montant').eq('mois', m).maybeSingle();
+      if (r2.error) throw r2.error;
+      const r3 = await sb.from('budgets_rub').select('rubrique,montant').eq('mois', m);
+      if (r3.error) throw r3.error;
+      if (!user || user.id !== uid) return;
+      const br = {};
+      r3.data.forEach(x => { br[x.rubrique] = x.montant; });
+      LS.set('c_' + uid + '_' + m, {
+        depenses: r1.data.map(x => ({ id: x.id, cid: x.cid || null, desc: x.description, montant: x.montant, cat: x.rubrique, date: x.date })),
+        budget: r2.data ? r2.data.montant : null,
+        budrub: br
+      });
+    } catch (e) { if (!estReseau(e)) erreur(e); }
+    tout();
+  }
+
+  async function chargerMois() {
+    tout();
+    if (!user) return;
+    if (queue.length) await synchroniser(); else await rafraichir();
+  }
+
+  function actualiser() {
+    if (!user) return;
+    if (queue.length) synchroniser(); else rafraichir();
+  }
+
+  window.addEventListener('online', () => { majEtat(); actualiser(); synchroConsentement(); });
+  window.addEventListener('offline', majEtat);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { salut(); actualiser(); } });
+  setInterval(() => { if (user && queue.length) synchroniser(); }, 20000);
+
+  // ---------- Session ----------
+  // ---------- Politique de confidentialité ----------
+  let accordEnAttente = null;
+  function consentementOk(u) {
+    const meta = u.user_metadata || {};
+    const loc = LS.get('pol_' + u.id, null);
+    return meta.politique_version === POLITIQUE_VERSION || !!(loc && loc.version === POLITIQUE_VERSION);
+  }
+  async function synchroConsentement() {
+    if (!user || !navigator.onLine) return;
+    const meta = user.user_metadata || {};
+    if (meta.politique_version === POLITIQUE_VERSION) return;
+    const loc = LS.get('pol_' + user.id, null);
+    if (!loc || loc.version !== POLITIQUE_VERSION) return;
+    const { error } = await sb.auth.updateUser({ data: { politique_version: POLITIQUE_VERSION, politique_date: loc.date } });
+    if (!error) user.user_metadata = Object.assign({}, meta, { politique_version: POLITIQUE_VERSION, politique_date: loc.date });
+  }
+  function ouvrirPolitique() { $('pol').classList.remove('cache'); $('pol').querySelector('.pol-corps').scrollTop = 0; }
+  function fermerPolitique() { $('pol').classList.add('cache'); }
+  ['a-pol', 'a-pol-lien', 'g-pol', 'p-pol'].forEach(id => { $(id).onclick = ouvrirPolitique; });
+  $('pol-fermer').onclick = fermerPolitique;
+  $('pol').addEventListener('click', e => { if (e.target === $('pol')) fermerPolitique(); });
+
+  $('g-ok').onclick = () => {
+    if (!$('g-accord').checked) { $('g-msg').textContent = 'Cochez la case pour continuer.'; return; }
+    const u = accordEnAttente;
+    if (!u) return;
+    LS.set('pol_' + u.id, { version: POLITIQUE_VERSION, date: new Date().toISOString() });
+    accordEnAttente = null;
+    $('g-accord').checked = false; $('g-msg').textContent = '';
+    demarrerSession(u);
+  };
+  $('g-refus').onclick = async () => {
+    accordEnAttente = null; user = null;
+    $('g-accord').checked = false; $('g-msg').textContent = '';
+    await sb.auth.signOut({ scope: 'local' });
+  };
+
+  // Suppression du compte et de toutes les données (fonction SQL « supprimer_mon_compte »)
+  $('p-supprimer').onclick = async () => {
+    if (!user) return;
+    if (!navigator.onLine) { alert('Une connexion internet est nécessaire pour supprimer votre compte.'); return; }
+    const rep = prompt('Cette action supprime DÉFINITIVEMENT votre compte et toutes vos données (dépenses, budgets, réclamations).\n\nPour confirmer, tapez SUPPRIMER :');
+    if (!rep || rep.trim().toUpperCase() !== 'SUPPRIMER') return;
+    const { error } = await sb.rpc('supprimer_mon_compte');
+    if (error) { erreur(error); return; }
+    const uid = user.id;
+    queue = [];
+    nettoyerLocal(uid);
+    LS.del('pol_' + uid);
+    await sb.auth.signOut({ scope: 'local' });
+    alert('Votre compte et vos données ont été supprimés.');
+  };
+
+  async function ouvrirSession(u) {
+    if (!consentementOk(u)) {
+      user = u; accordEnAttente = u;
+      ecran('accord');
+      return;
+    }
+    await demarrerSession(u);
+  }
+
+  async function demarrerSession(u) {
+    user = u;
+    queue = LS.get('q_' + u.id, []);
+    const pc = LS.get('p_' + u.id, {});
+    d = {
+      prenom: pc.prenom || (u.user_metadata && u.user_metadata.prenom) || '',
+      cats: pc.cats || [],
+      theme: pc.theme || localStorage.getItem('theme') || 'vert',
+      avatar: pc.avatar || null,
+      couleurs: pc.couleurs || {},
+      depenses: [], budget: 0, budrub: {}
+    };
+    Object.assign(d, patchEnAttente());
+    mois = aujourdhui().slice(0, 7);
+    $('date').value = aujourdhui();
+    $('p-compte').textContent = u.email || '';
+    ecran('app');
+    onglet('dep');
+    appliquerTheme(d.theme);
+    salut(); majAvatar(); majEtat(); tout();
+    synchroConsentement();
+    await chargerProfil();
+    if (!user || user.id !== u.id) return;
+    await chargerMois();
+  }
+
+  // ---------- Navigation ----------
+  const PAGES = ['dep', 'bud', 'ana', 'rap', 'aide', 'profil'];
+  function onglet(n) {
+    PAGES.forEach(x => {
+      $('p-' + x).classList.toggle('cache', x !== n);
+      const nb = $('n-' + x);
+      if (nb) nb.classList.toggle('actif', x === n);
+    });
+    $('barre-mois').classList.toggle('cache', n === 'aide' || n === 'profil');
+    window.scrollTo(0, 0);
+    rubOuverte = null; rubEdition = null;
+    if (d) {
+      tout();
+      if (n === 'aide') chargerReclamations();
+      if (n === 'profil') $('p-prenom').value = d.prenom || '';
+    }
+  }
+  ['dep', 'bud', 'ana', 'rap', 'aide'].forEach(x => { $('n-' + x).onclick = () => onglet(x); });
+  $('h-avatar').onclick = () => onglet('profil');
+
+  function decaler(n) {
+    let a = +mois.slice(0, 4), m = +mois.slice(5, 7) + n;
+    if (m < 1) { m = 12; a--; }
+    if (m > 12) { m = 1; a++; }
+    mois = a + '-' + pad(m);
+    chargerMois();
+  }
+  $('m-prec').onclick = () => decaler(-1);
+  $('m-suiv').onclick = () => decaler(1);
+
+  // ---------- Affichage ----------
+  const catsListe = () => CATS_DEFAUT.concat(d.cats);
+  const totalMois = () => d.depenses.reduce((s, x) => s + x.montant, 0);
+  function parCat(l) {
+    const r = {};
+    l.forEach(x => { r[x.cat] = (r[x.cat] || 0) + x.montant; });
+    return r;
+  }
+
+  function remplirSelect(el, options, premier) {
+    const sig = options.join('|');
+    if (el.dataset.sig === sig) return;
+    const v = el.value;
+    el.innerHTML = (premier ? '<option value="">' + premier + '</option>' : '') + options.map(x => '<option>' + esc(x) + '</option>').join('');
+    el.dataset.sig = sig;
+    if (options.includes(v)) el.value = v;
+  }
+
+  function tout() {
+    if (!d) return;
+    majVue();
+    $('mois-lib').textContent = libMois(mois);
+    const b = d.budget, t = totalMois(), r = b - t;
+    const st = statutBudget(b, t);
+    const pct = b > 0 ? t / b * 100 : 0;
+    const par = parCat(d.depenses);
+
+    $('stats-dep').innerHTML =
+      '<div class="stat s-' + st + '"><small>Budget</small><b>' + fcfa(b) + '</b></div>' +
+      '<div class="stat"><small>Dépensé</small><b>' + fcfa(t) + '</b></div>' +
+      '<div class="stat s-' + st + '"><small>Reste</small><b>' + fcfa(r) + '</b></div>';
+    $('jauge-dep').className = 'jauge s-' + st;
+    $('jauge-dep').innerHTML = b > 0
+      ? '<div class="barre"><i style="width:' + Math.min(100, pct) + '%"></i></div><small>' + Math.round(pct) + ' % du budget utilisé</small>' : '';
+
+    $('stats-bud').innerHTML =
+      '<div class="stat grand s-' + st + '"><small>Budget de ' + libMois(mois) + '</small><b>' + fcfa(b) + '</b></div>' +
+      '<div class="stat grand s-' + st + '"><small>Reste</small><b>' + fcfa(r) + '</b>' +
+      (b > 0 ? '<div class="jauge" style="margin-top:6px"><div class="barre"><i style="width:' + Math.min(100, pct) + '%"></i></div><small>' + Math.round(pct) + ' % utilisé</small></div>' : '') +
+      '<small style="margin-top:4px">Dépensé : ' + fcfa(t) + '</small></div>';
+
+    let av = '', avCl = 'msg';
+    if (b === 0) av = 'Définissez votre budget dans l’onglet Budget.';
+    else if (st === 'rouge') { av = 'Attention : budget dépassé de ' + fcfa(-r) + '.'; avCl = 'msg s-rouge'; }
+    else if (st === 'jaune') { av = 'Attention : ' + Math.round(pct) + ' % de votre budget est déjà utilisé.'; avCl = 'msg s-jaune'; }
+    $('avert').className = avCl;
+    $('avert').textContent = av;
+    $('b-val').placeholder = 'Budget de ' + libMois(mois) + ' en FCFA';
+
+    const l = catsListe();
+    remplirSelect($('cat'), l, '');
+    remplirSelect($('filtre'), l, 'Toutes les rubriques');
+
+    $('resume').innerHTML = Object.keys(par).map(k => '<div class="chip"><i class="pt" style="background:' + couleurRub(k) + '"></i>' + esc(k) + ' : <b>' + fcfa(par[k]) + '</b></div>').join('')
+      || '<div class="note">Aucune dépense ce mois-ci.</div>';
+
+    const fl = $('filtre').value;
+    const lignes = d.depenses.filter(x => !fl || x.cat === fl);
+    $('liste').innerHTML = lignes.length ? lignes.map(x =>
+      '<li><span>' + esc(x.desc) + '<small>' + dateFr(x.date) + '</small><span class="tag"><i class="pt" style="background:' + couleurRub(x.cat) + '"></i>' + esc(x.cat) + '</span>' +
+      (x.attente ? '<span class="attente" title="En attente d’envoi">⏳</span>' : '') + '</span>' +
+      '<div><span class="montant">' + fcfa(x.montant) + '</span>' +
+      '<button class="sup" onclick="supprimer(\'' + (x.cid || '') + '\',' + (x.id === null ? 'null' : x.id) + ')">✕</button></div></li>'
+    ).join('') : '<div class="vide">Aucune dépense</div>';
+
+    renderRepartition(par);
+
+    $('rub-liste').innerHTML = CATS_DEFAUT.map(x => '<span class="tag"><i class="pt" style="background:' + couleurRub(x) + '"></i>' + esc(x) + '</span>').join(' ') +
+      (d.cats.length ? '<p class="note" style="margin-top:8px">Vos rubriques (✕ pour supprimer) :</p>' +
+        d.cats.map((x, i) => '<span class="tag"><i class="pt" style="background:' + couleurRub(x) + '"></i>' + esc(x) + '<button class="sup" onclick="supprimerCat(' + i + ')">✕</button></span>').join(' ') : '');
+
+    $('rap-contenu').innerHTML = '<h3>' + libMois(mois) + '</h3>' +
+      '<p>Budget : <b>' + fcfa(b) + '</b></p><p>Dépensé : <b>' + fcfa(t) + '</b></p><p>Reste : <b>' + fcfa(r) + '</b></p>' +
+      '<p>Nombre de dépenses : <b>' + d.depenses.length + '</b></p>' +
+      (Object.keys(par).length ? '<hr>' + Object.keys(par).map(k => '<p>' + esc(k) + ' : <b>' + fcfa(par[k]) + '</b></p>').join('') : '');
+
+    if (!$('p-ana').classList.contains('cache')) renderAnalyse(par);
+  }
+  $('filtre').onchange = tout;
+
+  function renderRepartition(par) {
+    const a = document.activeElement;
+    if (a && a.classList && a.classList.contains('rep-in')) return;
+    const noms = catsListe().slice();
+    Object.keys(par).forEach(k => { if (!noms.includes(k)) noms.push(k); });
+    let somme = 0;
+    $('rep-liste').innerHTML = noms.map(nom => {
+      const bud = d.budrub[nom] || 0;
+      somme += bud;
+      const dep = par[nom] || 0;
+      const reste = bud - dep;
+      const pct = bud > 0 ? Math.min(100, dep / bud * 100) : 0;
+      const st = statutBudget(bud, dep);
+      const col = couleurRub(nom);
+      const edition = rubEdition && rubEdition.nom === nom;
+      return '<div class="rep s-' + st + '"><div class="rep-top">' +
+        '<button class="pastille" data-c="' + esc(nom) + '" style="background:' + col + '" aria-label="Changer la couleur de ' + esc(nom) + '"></button>' +
+        '<span>' + esc(nom) + '</span>' +
+        '<span class="rep-montant">' + (bud > 0 ? fcfa(bud) : 'Non défini') + '</span>' +
+        '<button class="crayon" data-r="' + esc(nom) + '" aria-label="Modifier le budget de ' + esc(nom) + '">✏️</button></div>' +
+        (edition ? '<div class="rep-edit"><input class="rep-in" type="number" inputmode="numeric" placeholder="Nouveau montant" value="' + esc(rubEdition.valeur) + '">' +
+          '<button class="ok-rub" aria-label="Valider">✔</button><button class="annuler-rub" aria-label="Annuler">✕</button></div>' +
+          '<small class="apercu">' + apercuRub(nom, rubEdition.valeur) + '</small>' : '') +
+        (rubOuverte === nom ? miniPalette(nom, col) : '') +
+        (bud > 0 ? '<div class="barre"><i style="width:' + pct + '%"></i></div>' : '') +
+        '<small>Dépensé : ' + fcfa(dep) + (bud > 0 ? ' · Reste : <b>' + fcfa(reste) + '</b>' : '') + '</small></div>';
+    }).join('');
+    const b = d.budget;
+    $('rep-total').innerHTML = 'Réparti : <b>' + fcfa(somme) + '</b>' +
+      (b ? ' sur ' + fcfa(b) + ' (non réparti : <b class="' + (b - somme < 0 ? 'rouge' : '') + '">' + fcfa(b - somme) + '</b>)' : '');
+    if (focusRub) {
+      focusRub = false;
+      const champ = $('rep-liste').querySelector('.rep-in');
+      if (champ) champ.focus();
+    }
+  }
+
+  function calculerNouveauBudget(nom, v) {
+    const ancien = d.budrub[nom] || 0;
+    const somme = Object.keys(d.budrub).reduce((s, k) => s + d.budrub[k], 0);
+    const sommeApres = somme - ancien + v;
+    let general = d.budget;
+    if (general <= 0) general = sommeApres;
+    else if (ancien > 0 && v > 0) general = general + (v - ancien);
+    else general = Math.max(general, sommeApres);
+    return Math.max(0, general);
+  }
+  function apercuRub(nom, texte) {
+    const t = String(texte).trim();
+    if (t === '') return 'Laissez vide pour retirer le budget de cette rubrique.';
+    const v = parseInt(t, 10);
+    if (isNaN(v) || v < 0) return 'Saisissez un montant valide.';
+    const nouveau = calculerNouveauBudget(nom, v);
+    const diff = nouveau - d.budget;
+    const t0 = totalMois();
+    return 'Budget général : ' + fcfa(d.budget) + ' → <b>' + fcfa(nouveau) + '</b>' +
+      (diff ? ' (' + (diff > 0 ? '+' : '−') + fcfa(Math.abs(diff)) + ')' : ' (inchangé)') +
+      '<br>Reste : ' + fcfa(d.budget - t0) + ' → <b>' + fcfa(nouveau - t0) + '</b>';
+  }
+  function quitterChamp() {
+    const a = document.activeElement;
+    if (a && a.blur && a !== document.body) a.blur();
+  }
+  function validerRub() {
+    if (!rubEdition) return;
+    const nom = rubEdition.nom;
+    const t = String(rubEdition.valeur).trim();
+    const v = t === '' ? 0 : parseInt(t, 10);
+    if (isNaN(v) || v < 0) { alert('Saisissez un montant valide.'); return; }
+    quitterChamp();
+    const nouveau = calculerNouveauBudget(nom, v);
+    const sansChangement = v === (d.budrub[nom] || 0) && nouveau === d.budget;
+    rubEdition = null;
+    if (sansChangement) { tout(); return; }
+    if (nouveau !== d.budget) ajouterOp({ op: 'bud', mois: mois, montant: nouveau });
+    ajouterOp({ op: 'brub', mois: mois, rubrique: nom, montant: v > 0 ? v : null });
+  }
+  function miniPalette(nom, col) {
+    return '<div class="mini-pal">' + PALETTE_RUB.map(p =>
+      '<button class="sw-rub' + (p.hex === col ? ' sel' : '') + '" data-c="' + esc(nom) + '" data-h="' + p.hex + '" style="background:' + p.hex +
+      '" title="' + p.nom + '" aria-label="' + p.nom + '"></button>').join('') +
+      '<button class="lien defaut" data-c="' + esc(nom) + '" data-h="">Couleur par défaut</button></div>';
+  }
+  function choisirCouleurRub(nom, hex) {
+    const c = Object.assign({}, d.couleurs);
+    if (hex && PALETTE_RUB.some(p => p.hex === hex)) c[nom] = hex; else delete c[nom];
+    d.couleurs = c;
+    rubOuverte = null;
+    sauverProfilLocal();
+    ajouterOp({ op: 'prof', patch: { couleurs: c } });
+  }
+  $('rep-liste').addEventListener('click', e => {
+    const pastille = e.target.closest('.pastille');
+    if (pastille) { quitterChamp(); rubEdition = null; rubOuverte = rubOuverte === pastille.dataset.c ? null : pastille.dataset.c; tout(); return; }
+    const crayon = e.target.closest('.crayon');
+    if (crayon) {
+      const nom = crayon.dataset.r;
+      quitterChamp();
+      rubOuverte = null;
+      rubEdition = (rubEdition && rubEdition.nom === nom) ? null : { nom: nom, valeur: d.budrub[nom] ? String(d.budrub[nom]) : '' };
+      focusRub = !!rubEdition;
+      tout();
+      return;
+    }
+    if (e.target.closest('.ok-rub')) { validerRub(); return; }
+    if (e.target.closest('.annuler-rub')) { quitterChamp(); rubEdition = null; tout(); return; }
+    const choix = e.target.closest('.sw-rub, .defaut');
+    if (choix) choisirCouleurRub(choix.dataset.c, choix.dataset.h);
+  });
+  $('rep-liste').addEventListener('input', e => {
+    if (!e.target.classList.contains('rep-in') || !rubEdition) return;
+    rubEdition.valeur = e.target.value;
+    const ap = $('rep-liste').querySelector('.apercu');
+    if (ap) ap.innerHTML = apercuRub(rubEdition.nom, rubEdition.valeur);
+  });
+  $('rep-liste').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.classList.contains('rep-in')) { e.preventDefault(); validerRub(); }
+  });
+
+  // ---------- Analyse ----------
+  function donut(par, total) {
+    const cles = Object.keys(par).sort((a, b) => par[b] - par[a]);
+    let cum = 0;
+    const R = 15.9155;
+    const arcs = cles.map((k, i) => {
+      const p = par[k] / total * 100;
+      const s = '<circle r="' + R + '" cx="21" cy="21" fill="transparent" stroke="' + couleurRub(k) +
+        '" stroke-width="6" stroke-dasharray="' + p + ' ' + (100 - p) + '" stroke-dashoffset="' + (25 - cum) + '"></circle>';
+      cum += p;
+      return s;
+    }).join('');
+    const legende = cles.map((k, i) =>
+      '<div><i style="background:' + couleurRub(k) + '"></i><span>' + esc(k) + '</span><b>' + fcfa(par[k]) + '</b><small>' + Math.round(par[k] / total * 100) + ' %</small></div>').join('');
+    return '<svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Répartition des dépenses par rubrique">' + arcs +
+      '<text x="21" y="21.5" text-anchor="middle" font-size="4" font-weight="bold" fill="#222">' + Math.round(total).toLocaleString('fr-FR') + '</text>' +
+      '<text x="21" y="26" text-anchor="middle" font-size="2.8" fill="#777">FCFA</text></svg>' +
+      '<div class="legende">' + legende + '</div>';
+  }
+
+  function barresJours(jours) {
+    const max = Math.max.apply(null, jours);
+    const n = jours.length;
+    const bars = jours.map((v, i) => {
+      const h = max > 0 ? v / max * 80 : 0;
+      return '<rect class="bar" x="' + (i * 10 + 1) + '" y="' + (90 - h) + '" width="8" height="' + h + '" rx="1.5"></rect>' +
+        (((i + 1) % 5 === 0 || i === 0) ? '<text x="' + (i * 10 + 5) + '" y="102">' + (i + 1) + '</text>' : '');
+    }).join('');
+    return '<svg class="jours" viewBox="0 0 ' + (n * 10) + ' 108" role="img" aria-label="Dépenses par jour">' + bars + '</svg>';
+  }
+
+  function renderAnalyse(par) {
+    par = par || parCat(d.depenses);
+    const l = d.depenses, t = totalMois(), n = l.length;
+    if (!n) {
+      $('ana-contenu').innerHTML = '<div class="carte"><h3>Analyse de ' + libMois(mois) + '</h3><p class="note">Aucune dépense ce mois-ci. Ajoutez-en dans l’onglet Dépenses pour voir apparaître les graphiques.</p></div>';
+      return;
+    }
+    const b = bornes(mois);
+    const nbJ = Math.round((new Date(b[1]) - new Date(b[0])) / 86400000);
+    const jours = new Array(nbJ).fill(0);
+    l.forEach(x => { const j = +x.date.slice(8, 10) - 1; if (j >= 0 && j < nbJ) jours[j] += x.montant; });
+    const ecoules = mois === aujourdhui().slice(0, 7) ? +aujourdhui().slice(8, 10) : nbJ;
+    const plusGrosse = l.reduce((m, x) => x.montant > m.montant ? x : m, l[0]);
+    const top = Object.keys(par).sort((a, c) => par[c] - par[a])[0];
+    const jMax = jours.indexOf(Math.max.apply(null, jours)) + 1;
+    const bud = d.budget;
+    $('ana-contenu').innerHTML =
+      '<div class="carte"><h3>Analyse de ' + libMois(mois) + '</h3>' +
+      '<p>Total dépensé : <b>' + fcfa(t) + '</b> (' + n + ' dépense' + (n > 1 ? 's' : '') + ')</p>' +
+      '<p>Moyenne par jour : <b>' + fcfa(t / ecoules) + '</b></p>' +
+      '<p>Rubrique principale : <b>' + esc(top) + '</b> (' + Math.round(par[top] / t * 100) + ' %)</p>' +
+      '<p>Plus grosse dépense : <b>' + fcfa(plusGrosse.montant) + '</b> · ' + esc(plusGrosse.desc) + '</p>' +
+      (bud > 0 ? '<div class="jauge s-' + statutBudget(bud, t) + '"><small>Budget utilisé : ' + Math.round(t / bud * 100) + ' %</small>' +
+        '<div class="barre"><i style="width:' + Math.min(100, t / bud * 100) + '%"></i></div></div>' : '') +
+      '</div>' +
+      '<div class="carte"><h3>Répartition par rubrique</h3>' + donut(par, t) + '</div>' +
+      '<div class="carte"><h3>Dépenses par jour</h3>' + barresJours(jours) +
+      '<p class="note">Jour le plus chargé : le ' + jMax + ' (' + fcfa(jours[jMax - 1]) + ')</p></div>';
+  }
+
+  // ---------- Actions ----------
+  $('ajout').onclick = () => {
+    const desc = $('desc').value.trim();
+    const m = parseInt($('montant').value, 10);
+    const date = $('date').value || aujourdhui();
+    if (!desc || !m || m <= 0) { alert('Saisissez une description et un montant valide.'); return; }
+    $('desc').value = ''; $('montant').value = ''; $('date').value = aujourdhui();
+    mois = date.slice(0, 7);
+    ajouterOp({ op: 'add', cid: nouvelId(), description: desc, montant: m, rubrique: $('cat').value, date: date });
+  };
+
+  function supprimer(cid, id) {
+    if (!confirm('Supprimer cette dépense ?')) return;
+    const i = cid ? queue.findIndex(o => o.op === 'add' && o.cid === cid) : -1;
+    if (i >= 0 && !(sync && i === 0)) {
+      queue.splice(i, 1);
+      sauverQueue(); tout(); majEtat();
+      return;
+    }
+    ajouterOp({ op: 'del', cid: cid || null, id: id });
+  }
+
+  $('b-ok').onclick = () => {
+    const v = parseInt($('b-val').value, 10);
+    if (isNaN(v) || v < 0) { alert('Saisissez un budget valide.'); return; }
+    $('b-val').value = '';
+    ajouterOp({ op: 'bud', mois: mois, montant: v });
+  };
+
+  function ajouterCat(nom) {
+    nom = (nom || '').trim();
+    if (!nom) return false;
+    if (nom.length > 20) { alert('20 caractères maximum.'); return false; }
+    if (catsListe().some(c => c.toLowerCase() === nom.toLowerCase())) { alert('Cette rubrique existe déjà.'); return false; }
+    d.cats = d.cats.concat([nom]);
+    sauverProfilLocal();
+    ajouterOp({ op: 'prof', patch: { cats: d.cats.slice() } });
+    return true;
+  }
+  $('nv-cat').onclick = () => {
+    const n = prompt('Nom de la nouvelle rubrique (ex: Éducation) :');
+    if (ajouterCat(n)) $('cat').value = n.trim();
+  };
+  $('rub-ok').onclick = () => { if (ajouterCat($('rub-nom').value)) $('rub-nom').value = ''; };
+
+  function supprimerCat(i) {
+    if (!confirm('Supprimer la rubrique « ' + d.cats[i] + ' » ? Les dépenses déjà saisies sont conservées.')) return;
+    d.cats = d.cats.filter((x, k) => k !== i);
+    sauverProfilLocal();
+    ajouterOp({ op: 'prof', patch: { cats: d.cats.slice() } });
+  }
+
+  // ---------- Profil : photo, prénom, couleurs ----------
+  $('p-photo').onclick = () => $('p-fichier').click();
+  $('p-fichier').onchange = async () => {
+    const f = $('p-fichier').files[0];
+    $('p-fichier').value = '';
+    if (!f) return;
+    try {
+      d.avatar = await traiterPhoto(f);
+      sauverProfilLocal(); majAvatar();
+      ajouterOp({ op: 'prof', patch: { avatar: d.avatar } });
+    } catch (e) { alert('Image illisible. Choisissez une photo au format JPG ou PNG.'); }
+  };
+  $('p-photo-sup').onclick = () => {
+    if (!d.avatar) return;
+    d.avatar = null;
+    sauverProfilLocal(); majAvatar();
+    ajouterOp({ op: 'prof', patch: { avatar: null } });
+  };
+  $('p-prenom-ok').onclick = () => {
+    const p = $('p-prenom').value.trim();
+    if (p.length < 2) { alert('Saisissez votre prénom.'); return; }
+    d.prenom = p;
+    sauverProfilLocal(); salut(); majAvatar();
+    ajouterOp({ op: 'prof', patch: { prenom: p } });
+  };
+  function choisirTheme(e) {
+    const b = e.target.closest('.sw');
+    if (!b || !d) return;
+    d.theme = b.dataset.t;
+    appliquerTheme(d.theme);
+    sauverProfilLocal();
+    ajouterOp({ op: 'prof', patch: { theme: d.theme } });
+  }
+  $('pal-uni').addEventListener('click', choisirTheme);
+  $('pal-deg').addEventListener('click', choisirTheme);
+
+  // ---------- Rapport ----------
+  function telecharger(nom, contenu) {
+    const blob = new Blob(['\ufeff' + contenu], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nom;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }
+
+  $('rap-dl').onclick = () => {
+    majVue();
+    const l = d.depenses.slice().sort((a, b) => a.date.localeCompare(b.date));
+    const b = d.budget, t = totalMois(), par = parCat(l);
+    const cel = v => {
+      if (typeof v === 'number') return v;
+      let s = String(v);
+      if (/^[=+\-@]/.test(s)) s = "'" + s;
+      return '"' + s.replace(/"/g, '""') + '"';
+    };
+    const noms = catsListe().slice();
+    Object.keys(par).forEach(k => { if (!noms.includes(k)) noms.push(k); });
+    const lignes = [
+      ['Rapport mensuel - WariPlan'],
+      ['Utilisateur', (d.prenom || '') + ' (' + (user.email || '') + ')'],
+      ['Mois', libMois(mois)],
+      ['Budget (FCFA)', b],
+      ['Total dépensé (FCFA)', t],
+      ['Reste (FCFA)', b - t],
+      [],
+      ['Date', 'Description', 'Rubrique', 'Montant (FCFA)']
+    ].concat(
+      l.map(x => [dateFr(x.date), x.desc, x.cat, x.montant]),
+      [[], ['Rubrique', 'Budget (FCFA)', 'Dépensé (FCFA)', 'Reste (FCFA)']],
+      noms.filter(k => par[k] || d.budrub[k]).map(k => [k, d.budrub[k] || 0, par[k] || 0, (d.budrub[k] || 0) - (par[k] || 0)])
+    );
+    const csv = lignes.map(r => r.map(cel).join(';')).join('\r\n');
+    telecharger('rapport-' + mois + '.csv', csv);
+  };
+
+  // ---------- Réclamations ----------
+  async function chargerReclamations() {
+    const box = $('rec-liste');
+    if (!navigator.onLine) { box.innerHTML = '<p class="note">Connexion internet requise pour voir vos réclamations.</p>'; return; }
+    const { data, error } = await sb.from('reclamations')
+      .select('id,sujet,message,statut,reponse,created_at')
+      .order('created_at', { ascending: false }).limit(20);
+    if (error) { box.innerHTML = '<p class="note">Impossible de charger vos réclamations pour le moment.</p>'; return; }
+    box.innerHTML = data.length ? data.map(r =>
+      '<div class="rec"><div><b>' + esc(r.sujet) + '</b> <span class="statut ' + esc(r.statut) + '">' + esc(STATUTS[r.statut] || r.statut) + '</span></div>' +
+      '<small class="note">' + new Date(r.created_at).toLocaleDateString('fr-FR') + '</small>' +
+      '<div>' + esc(r.message) + '</div>' +
+      (r.reponse ? '<div class="reponse"><b>Réponse du support :</b><br>' + esc(r.reponse) + '</div>' : '') + '</div>'
+    ).join('') : '<p class="note">Aucune réclamation envoyée.</p>';
+  }
+
+  $('rec-ok').onclick = async () => {
+    const sujet = $('rec-sujet').value.trim();
+    const message = $('rec-msg').value.trim();
+    if (sujet.length < 3) { alert('Saisissez un sujet (3 caractères minimum).'); return; }
+    if (message.length < 5) { alert('Décrivez votre demande (5 caractères minimum).'); return; }
+    if (!navigator.onLine) { alert('Une connexion internet est nécessaire pour envoyer une réclamation.'); return; }
+    $('rec-ok').disabled = true;
+    const { error } = await sb.from('reclamations').insert({ sujet: sujet, message: message });
+    $('rec-ok').disabled = false;
+    if (error) { erreur(error); return; }
+    $('rec-sujet').value = ''; $('rec-msg').value = '';
+    alert('Votre réclamation a été envoyée. Nous vous répondrons dans cette page.');
+    chargerReclamations();
+  };
+
+  // ---------- Support et don ----------
+  $('aide-wa').href = 'https://wa.me/' + CONFIG.WHATSAPP + '?text=' + encodeURIComponent('Bonjour, j’ai besoin d’aide avec WariPlan.');
+  $('aide-mail').href = 'mailto:' + CONFIG.EMAIL + '?subject=' + encodeURIComponent('Support - WariPlan');
+  $('don').href = CONFIG.WAVE;
+
+  const POS = ['18%', '38%', '58%', '28%', '48%'];
+  let ip = 0;
+  setInterval(() => { ip = (ip + 1) % POS.length; $('don').style.top = POS[ip]; }, 5000);
+
+  // ---------- Démarrage ----------
+  modeAuth('con');
+  if (lienExpire) {
+    modeAuth('oubli');
+    $('a-msg').textContent = 'Ce lien a expiré ou a déjà été utilisé. Demandez-en un nouveau.';
+    history.replaceState(null, '', location.pathname);
+  }
+  setTimeout(() => { if (!$('chargement').classList.contains('cache')) ecran('auth'); }, 5000);
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
