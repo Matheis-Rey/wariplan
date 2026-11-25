@@ -1,5 +1,5 @@
 # depense# WariPlan
-![Logo WariPlan](./assets/wariplan-logo-full.png)
+![Logo WariPlan](wariplan-logo-full.png)
 
 Planifie ton mois, maîtrise chaque dépense ✨
 
