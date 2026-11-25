@@ -53,6 +53,12 @@
   .pol-corps .pol-date { color: #777; font-size: 12px; }
   .pol-resume { background: var(--clair); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
   .pol-resume small { color: #555; }
+  .maj-fond { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 55; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .maj-boite { background: #fff; width: 100%; max-width: 440px; border-radius: 16px; padding: 18px; display: grid; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.22); }
+  .maj-badge { display: inline-block; background: var(--clair); color: var(--prim); font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 20px; width: fit-content; }
+  .maj-boite h3 { font-size: 18px; }
+  .maj-boite ul { list-style: disc; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; line-height: 1.45; }
+  .maj-boite li { background: none; padding: 0; border-radius: 0; display: list-item; }
   .lien { background: none; border: 0; color: var(--prim); text-decoration: underline; font-size: 14px; padding: 6px; }
   .carte { background: #fff; border-radius: 12px; padding: 14px; display: grid; gap: 8px; }
   .grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -80,6 +86,15 @@
   .onglets button.actif { background: var(--fond); color: #fff; }
   .mois { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 12px; padding: 4px; }
   .mois button { background: none; border: 0; font-size: 26px; padding: 6px 16px; color: var(--prim); }
+  .periode-box { background: #fff; border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+  .periode-rapides { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (min-width: 460px) { .periode-rapides { grid-template-columns: repeat(4, 1fr); } }
+  .periode-rapides button { padding: 9px 8px; border: 1px solid var(--prim); background: #fff; color: var(--prim); border-radius: 8px; font-size: 13px; }
+  .periode-rapides button.actif { background: var(--fond); color: #fff; font-weight: bold; }
+  .periode-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .periode-dates label { display: grid; gap: 4px; font-size: 12px; color: #555; }
+  .periode-dates input[type="date"] { padding: 10px; font-size: 14px; }
+  .periode-info { font-size: 12px; color: #666; }
   .puces { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { background: #fff; border-radius: 20px; padding: 8px 12px; font-size: 13px; border: 1px solid #dde; }
   .chip b { color: var(--prim); }
@@ -210,6 +225,26 @@
     </div>
   </div>
 
+  <div id="barre-periode" class="page cache" style="padding-bottom:0">
+    <div class="periode-box">
+      <div class="periode-rapides" id="periode-rapides">
+        <button type="button" data-r="mois">Mois courant</button>
+        <button type="button" data-r="3m">3 mois</button>
+        <button type="button" data-r="6m">6 mois</button>
+        <button type="button" data-r="12m">12 mois</button>
+      </div>
+      <div class="periode-dates">
+        <label>Du
+          <input type="date" id="per-debut">
+        </label>
+        <label>Au
+          <input type="date" id="per-fin">
+        </label>
+      </div>
+      <div class="periode-info" id="per-resume"></div>
+    </div>
+  </div>
+
   <!-- Onglet Dépenses -->
   <div id="p-dep" class="page">
     <div id="stats-dep" class="grille"></div>
@@ -258,7 +293,7 @@
   <!-- Onglet Rapport -->
   <div id="p-rap" class="page cache">
     <div id="rap-contenu" class="carte"></div>
-    <button class="btn" id="rap-dl">Télécharger le rapport du mois</button>
+    <button class="btn" id="rap-dl">Télécharger le rapport</button>
     <p class="note">Le fichier (format CSV) s’ouvre avec Excel, Google Sheets ou WPS Office.</p>
   </div>
 
@@ -329,6 +364,16 @@
     <button id="n-rap">📄<br>Rapport</button>
     <button id="n-aide">🛟<br>Aide</button>
   </nav>
+</div>
+
+<!-- Notification de mise à jour -->
+<div id="maj-modale" class="maj-fond cache" role="dialog" aria-modal="true" aria-labelledby="maj-titre">
+  <div class="maj-boite">
+    <span class="maj-badge" id="maj-version"></span>
+    <h3 id="maj-titre"></h3>
+    <ul id="maj-liste"></ul>
+    <button class="btn" id="maj-ok">Compris</button>
+  </div>
 </div>
 
 <!-- Politique de confidentialité (fenêtre de lecture) -->
@@ -447,6 +492,18 @@
   };
   // ==============================
 
+  // ====== NOTE DE MISE À JOUR (à modifier à chaque nouvelle version) ======
+  const MAJ_INFO = {
+    version: '2026-11-25-periode',
+    titre: 'Nouveautés de cette mise à jour',
+    details: [
+      'Sélecteur de période dans Analyse et Rapport (mois courant, 3, 6, 12 mois ou plage personnalisée jusqu’à 1 an en arrière).',
+      'Vue adaptée selon qu’il s’agit d’un mois unique ou d’une plage multi-mois.',
+      'Ajout des devises Dollar américain ($), Euro (€) et Roupie indienne (₹) dans votre Profil.'
+    ]
+  };
+  // ======================================================================
+
   const POLITIQUE_VERSION = '2026-11-20';
   const CATS_DEFAUT = ['Transport', 'Nourriture', 'Factures', 'Santé', 'Loisirs', 'Épargne', 'Famille', 'Autre'];
   const NOMS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -544,6 +601,23 @@
     return [m + '-01', a + '-' + pad(n) + '-01'];
   }
 
+  // ---------- Notification de mise à jour ----------
+  function verifierMiseAJour() {
+    if (!user || !MAJ_INFO || !MAJ_INFO.version) return;
+    const cle = 'maj_' + user.id;
+    if (LS.get(cle, null) === MAJ_INFO.version) return;
+    $('maj-version').textContent = 'Version ' + MAJ_INFO.version;
+    $('maj-titre').textContent = MAJ_INFO.titre || 'Mise à jour disponible';
+    $('maj-liste').innerHTML = (MAJ_INFO.details || []).map(x => '<li>' + esc(x) + '</li>').join('');
+    $('maj-modale').classList.remove('cache');
+  }
+  $('maj-ok').onclick = () => {
+    if (user && MAJ_INFO && MAJ_INFO.version) {
+      LS.set('maj_' + user.id, MAJ_INFO.version);
+    }
+    $('maj-modale').classList.add('cache');
+  };
+
   // ---------- Thèmes ----------
   function melanger(hex, t) {
     const n = parseInt(hex.slice(1), 16);
@@ -589,6 +663,13 @@
   let rubOuverte = null;
   let rubEdition = null;
   let focusRub = false;
+
+  // Sélecteur de période (Analyse & Rapport)
+  let modePeriode = 'mois'; // 'mois' | '3m' | '6m' | '12m' | 'perso'
+  let perDebut = '';
+  let perFin = '';
+  let depsPeriode = [];
+  let budgetMoisUniquePeriode = 0;
 
   // Couleur d'une rubrique : celle choisie par l'utilisateur, sinon une couleur par défaut
   function couleurRub(nom) {
@@ -749,6 +830,7 @@
         if (!user || user.id !== session.user.id) ouvrirSession(session.user);
       } else {
         user = null; d = null; queue = [];
+        $('maj-modale').classList.add('cache');
         ecran('auth');
       }
     }, 0);
@@ -980,6 +1062,9 @@
       });
     } catch (e) { if (!estReseau(e)) erreur(e); }
     tout();
+    if (!$('p-ana').classList.contains('cache') || !$('p-rap').classList.contains('cache')) {
+      await chargerPeriode();
+    }
   }
 
   async function chargerMois() {
@@ -1047,6 +1132,7 @@
     queue = [];
     nettoyerLocal(uid);
     LS.del('pol_' + uid);
+    LS.del('maj_' + uid);
     await sb.auth.signOut({ scope: 'local' });
     alert('Votre compte et vos données ont été supprimés.');
   };
@@ -1075,6 +1161,13 @@
     };
     Object.assign(d, patchEnAttente());
     mois = aujourdhui().slice(0, 7);
+    modePeriode = 'mois';
+    const plageInit = calculerPlageRapide('mois');
+    perDebut = plageInit.debut;
+    perFin = plageInit.fin;
+    depsPeriode = [];
+    budgetMoisUniquePeriode = 0;
+
     $('date').value = aujourdhui();
     $('p-compte').textContent = u.email || '';
     $('p-devise').value = d.devise;
@@ -1082,11 +1175,218 @@
     onglet('dep');
     appliquerTheme(d.theme);
     salut(); majAvatar(); majEtat(); tout();
+    verifierMiseAJour();
     synchroConsentement();
     await chargerProfil();
     if (!user || user.id !== u.id) return;
     await chargerMois();
   }
+
+  // ---------- Sélecteur de période (limite max : 1 an en arrière) ----------
+  function dateIsoDepuis(baseIso, deltaMois, deltaJours) {
+    const y = +baseIso.slice(0, 4);
+    const m = +baseIso.slice(5, 7) - 1 + (deltaMois || 0);
+    const j = +baseIso.slice(8, 10) + (deltaJours || 0);
+    const dt = new Date(y, m, j);
+    return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate());
+  }
+
+  function limiteMinUnAn() {
+    return dateIsoDepuis(aujourdhui(), -12, 0);
+  }
+
+  function calculerPlageRapide(cle) {
+    const fin = aujourdhui();
+    const minUnAn = limiteMinUnAn();
+    let debut;
+    if (cle === 'mois') {
+      debut = fin.slice(0, 7) + '-01';
+    } else if (cle === '3m') {
+      debut = dateIsoDepuis(fin, -3, 1);
+    } else if (cle === '6m') {
+      debut = dateIsoDepuis(fin, -6, 1);
+    } else {
+      debut = minUnAn;
+    }
+    if (debut < minUnAn) debut = minUnAn;
+    if (debut > fin) debut = fin;
+    return { debut, fin };
+  }
+
+  function normaliserPlage(debut, fin) {
+    const minUnAn = limiteMinUnAn();
+    const maxAuj = aujourdhui();
+    let d1 = debut || minUnAn;
+    let d2 = fin || maxAuj;
+    if (d1 < minUnAn) d1 = minUnAn;
+    if (d2 > maxAuj) d2 = maxAuj;
+    if (d1 > d2) d1 = d2;
+    return { debut: d1, fin: d2 };
+  }
+
+  function estMoisUnique() {
+    return !!(perDebut && perFin && perDebut.slice(0, 7) === perFin.slice(0, 7));
+  }
+
+  function nombreJoursPlage() {
+    if (!perDebut || !perFin) return 1;
+    const t1 = new Date(perDebut + 'T00:00:00');
+    const t2 = new Date(perFin + 'T00:00:00');
+    return Math.max(1, Math.round((t2 - t1) / 86400000) + 1);
+  }
+
+  function nombreMoisCouverts() {
+    if (!perDebut || !perFin) return 1;
+    const a1 = +perDebut.slice(0, 4), m1 = +perDebut.slice(5, 7);
+    const a2 = +perFin.slice(0, 4), m2 = +perFin.slice(5, 7);
+    return Math.max(1, (a2 - a1) * 12 + (m2 - m1) + 1);
+  }
+
+  function libPeriode() {
+    if (!perDebut || !perFin) return '';
+    const base = perDebut === perFin
+      ? 'Le ' + dateFr(perDebut)
+      : 'Du ' + dateFr(perDebut) + ' au ' + dateFr(perFin);
+    return estMoisUnique()
+      ? base + ' · Mois unique (' + libMois(perDebut.slice(0, 7)) + ')'
+      : base + ' · Plage multi-mois (' + nombreMoisCouverts() + ' mois)';
+  }
+
+  function syncInputsPeriode() {
+    const minUnAn = limiteMinUnAn();
+    const maxAuj = aujourdhui();
+    $('per-debut').min = minUnAn;
+    $('per-debut').max = maxAuj;
+    $('per-fin').min = minUnAn;
+    $('per-fin').max = maxAuj;
+    $('per-debut').value = perDebut;
+    $('per-fin').value = perFin;
+    document.querySelectorAll('#periode-rapides button').forEach(b => {
+      b.classList.toggle('actif', b.dataset.r === modePeriode);
+    });
+    $('per-resume').textContent = libPeriode() + ' · Limite max. 1 an en arrière (' + dateFr(minUnAn) + ')';
+  }
+
+  function depsPourPeriodeActuelle() {
+    const liste = [];
+    const seen = new Set();
+    depsPeriode.forEach(x => {
+      const k = x.cid || ('id:' + x.id);
+      if (!seen.has(k) && x.date >= perDebut && x.date <= perFin) {
+        seen.add(k);
+        liste.push(Object.assign({}, x));
+      }
+    });
+    queue.forEach(o => {
+      if (o.op === 'add' && o.date >= perDebut && o.date <= perFin) {
+        if (!seen.has(o.cid)) {
+          seen.add(o.cid);
+          liste.push({ id: null, cid: o.cid, desc: o.description, montant: Number(o.montant), cat: o.rubrique, date: o.date, attente: true });
+        }
+      } else if (o.op === 'del') {
+        for (let i = liste.length - 1; i >= 0; i--) {
+          const x = liste[i];
+          if ((o.cid && x.cid === o.cid) || (o.id !== null && o.id !== undefined && x.id === o.id)) {
+            liste.splice(i, 1);
+          }
+        }
+      }
+    });
+    liste.sort((a, b) => b.date.localeCompare(a.date) || ((b.id || 9e15) - (a.id || 9e15)));
+    return liste;
+  }
+
+  function budgetPourPeriodeActuelle() {
+    if (!estMoisUnique()) return 0;
+    const m = perDebut.slice(0, 7);
+    let b = budgetMoisUniquePeriode;
+    const c = lireCache(m);
+    if (c && c.budget !== null && c.budget !== undefined) b = Number(c.budget);
+    queue.forEach(o => {
+      if (o.op === 'bud' && o.mois === m) b = Number(o.montant);
+    });
+    return b || 0;
+  }
+
+  async function chargerPeriode() {
+    if (!perDebut || !perFin) {
+      const p = calculerPlageRapide(modePeriode);
+      perDebut = p.debut;
+      perFin = p.fin;
+    }
+    syncInputsPeriode();
+    if (!user) return;
+
+    const locaux = [];
+    const curMois = aujourdhui().slice(0, 7);
+    const cacheCourant = lireCache(curMois);
+    if (cacheCourant && cacheCourant.depenses) locaux.push.apply(locaux, cacheCourant.depenses);
+    if (mois !== curMois) {
+      const cacheSel = lireCache(mois);
+      if (cacheSel && cacheSel.depenses) locaux.push.apply(locaux, cacheSel.depenses);
+    }
+    depsPeriode = locaux;
+
+    if (estMoisUnique()) {
+      const cMois = lireCache(perDebut.slice(0, 7));
+      budgetMoisUniquePeriode = (cMois && cMois.budget) ? Number(cMois.budget) : 0;
+    } else {
+      budgetMoisUniquePeriode = 0;
+    }
+    tout();
+
+    if (!navigator.onLine) return;
+    const uid = user.id, d1 = perDebut, d2 = perFin;
+    try {
+      const reqDeps = sb.from('depenses')
+        .select('id,cid,description,montant,rubrique,date')
+        .gte('date', d1).lte('date', d2)
+        .order('date', { ascending: false }).order('id', { ascending: false }).limit(2000);
+
+      const reqBud = (d1.slice(0, 7) === d2.slice(0, 7))
+        ? sb.from('budgets').select('montant').eq('mois', d1.slice(0, 7)).maybeSingle()
+        : Promise.resolve({ data: null, error: null });
+
+      const [r1, r2] = await Promise.all([reqDeps, reqBud]);
+      if (r1.error) throw r1.error;
+      if (r2.error) throw r2.error;
+      if (!user || user.id !== uid || perDebut !== d1 || perFin !== d2) return;
+
+      depsPeriode = r1.data.map(x => ({
+        id: x.id,
+        cid: x.cid || null,
+        desc: x.description,
+        montant: Number(x.montant),
+        cat: x.rubrique,
+        date: x.date
+      }));
+      budgetMoisUniquePeriode = (d1.slice(0, 7) === d2.slice(0, 7) && r2.data) ? Number(r2.data.montant) : 0;
+      tout();
+    } catch (e) { if (!estReseau(e)) erreur(e); }
+  }
+
+  function choisirRapide(cle) {
+    modePeriode = cle;
+    const p = calculerPlageRapide(cle);
+    perDebut = p.debut;
+    perFin = p.fin;
+    chargerPeriode();
+  }
+
+  function surChangementDateManuelle() {
+    modePeriode = 'perso';
+    const norm = normaliserPlage($('per-debut').value, $('per-fin').value);
+    perDebut = norm.debut;
+    perFin = norm.fin;
+    chargerPeriode();
+  }
+
+  $('periode-rapides').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-r]');
+    if (btn) choisirRapide(btn.dataset.r);
+  });
+  $('per-debut').onchange = surChangementDateManuelle;
+  $('per-fin').onchange = surChangementDateManuelle;
 
   // ---------- Navigation ----------
   const PAGES = ['dep', 'bud', 'ana', 'rap', 'aide', 'profil'];
@@ -1096,11 +1396,16 @@
       const nb = $('n-' + x);
       if (nb) nb.classList.toggle('actif', x === n);
     });
-    $('barre-mois').classList.toggle('cache', n === 'aide' || n === 'profil');
+    $('barre-mois').classList.toggle('cache', n === 'ana' || n === 'rap' || n === 'aide' || n === 'profil');
+    $('barre-periode').classList.toggle('cache', n !== 'ana' && n !== 'rap');
     window.scrollTo(0, 0);
     rubOuverte = null; rubEdition = null;
     if (d) {
       tout();
+      if (n === 'ana' || n === 'rap') {
+        if (!perDebut || !perFin) choisirRapide(modePeriode || 'mois');
+        else chargerPeriode();
+      }
       if (n === 'aide') chargerReclamations();
       if (n === 'profil') {
         $('p-prenom').value = d.prenom || '';
@@ -1195,12 +1500,8 @@
       (d.cats.length ? '<p class="note" style="margin-top:8px">Vos rubriques (✕ pour supprimer) :</p>' +
         d.cats.map((x, i) => '<span class="tag"><i class="pt" style="background:' + couleurRub(x) + '"></i>' + esc(x) + '<button class="sup" onclick="supprimerCat(' + i + ')">✕</button></span>').join(' ') : '');
 
-    $('rap-contenu').innerHTML = '<h3>' + libMois(mois) + '</h3>' +
-      '<p>Budget : <b>' + argent(b) + '</b></p><p>Dépensé : <b>' + argent(t) + '</b></p><p>Reste : <b>' + argent(r) + '</b></p>' +
-      '<p>Nombre de dépenses : <b>' + d.depenses.length + '</b></p>' +
-      (Object.keys(par).length ? '<hr>' + Object.keys(par).map(k => '<p>' + esc(k) + ' : <b>' + argent(par[k]) + '</b></p>').join('') : '');
-
-    if (!$('p-ana').classList.contains('cache')) renderAnalyse(par);
+    renderRapport();
+    if (!$('p-ana').classList.contains('cache')) renderAnalyse();
   }
   $('filtre').onchange = tout;
 
@@ -1324,7 +1625,7 @@
     if (e.key === 'Enter' && e.target.classList.contains('rep-in')) { e.preventDefault(); validerRub(); }
   });
 
-  // ---------- Analyse ----------
+  // ---------- Analyse (Mois unique vs Plage multi-mois) ----------
   function donut(par, total) {
     const dev = infoDevise();
     const cles = Object.keys(par).sort((a, b) => par[b] - par[a]);
@@ -1345,45 +1646,110 @@
       '<div class="legende">' + legende + '</div>';
   }
 
-  function barresJours(jours) {
-    const max = Math.max.apply(null, jours);
-    const n = jours.length;
-    const bars = jours.map((v, i) => {
-      const h = max > 0 ? v / max * 80 : 0;
+  function barresSeries(points) {
+    if (!points.length) return '';
+    const max = Math.max.apply(null, points.map(p => p.val));
+    const n = points.length;
+    const pasLabel = n > 20 ? Math.ceil(n / 6) : (n > 10 ? 5 : 1);
+    const bars = points.map((p, i) => {
+      const h = max > 0 ? p.val / max * 80 : 0;
+      const showLbl = (i === 0 || i === n - 1 || (i + 1) % pasLabel === 0);
       return '<rect class="bar" x="' + (i * 10 + 1) + '" y="' + (90 - h) + '" width="8" height="' + h + '" rx="1.5"></rect>' +
-        (((i + 1) % 5 === 0 || i === 0) ? '<text x="' + (i * 10 + 5) + '" y="102">' + (i + 1) + '</text>' : '');
+        (showLbl ? '<text x="' + (i * 10 + 5) + '" y="102">' + esc(p.label) + '</text>' : '');
     }).join('');
-    return '<svg class="jours" viewBox="0 0 ' + (n * 10) + ' 108" role="img" aria-label="Dépenses par jour">' + bars + '</svg>';
+    return '<svg class="jours" viewBox="0 0 ' + (n * 10) + ' 108" role="img" aria-label="Évolution des dépenses">' + bars + '</svg>';
   }
 
-  function renderAnalyse(par) {
-    par = par || parCat(d.depenses);
-    const l = d.depenses, t = totalMois(), n = l.length;
+  function serieJoursPlage(liste, d1, d2) {
+    const points = [];
+    const index = {};
+    let cur = d1;
+    while (cur <= d2) {
+      index[cur] = points.length;
+      points.push({ cle: cur, label: cur.slice(8, 10), detail: dateFr(cur), val: 0 });
+      cur = dateIsoDepuis(cur, 0, 1);
+    }
+    liste.forEach(x => {
+      const idx = index[x.date];
+      if (idx !== undefined) points[idx].val = Math.round((points[idx].val + Number(x.montant)) * 100) / 100;
+    });
+    return points;
+  }
+
+  function serieMoisPlage(liste, d1, d2) {
+    const points = [];
+    const index = {};
+    let a = +d1.slice(0, 4), m = +d1.slice(5, 7);
+    const aFin = +d2.slice(0, 4), mFin = +d2.slice(5, 7);
+    while (a < aFin || (a === aFin && m <= mFin)) {
+      const cle = a + '-' + pad(m);
+      index[cle] = points.length;
+      points.push({ cle: cle, label: NOMS[m - 1].slice(0, 3), detail: libMois(cle), val: 0 });
+      m++;
+      if (m > 12) { m = 1; a++; }
+    }
+    liste.forEach(x => {
+      const cle = x.date.slice(0, 7);
+      const idx = index[cle];
+      if (idx !== undefined) points[idx].val = Math.round((points[idx].val + Number(x.montant)) * 100) / 100;
+    });
+    return points;
+  }
+
+  function renderAnalyse() {
+    if (!perDebut || !perFin) {
+      const p = calculerPlageRapide(modePeriode);
+      perDebut = p.debut;
+      perFin = p.fin;
+      syncInputsPeriode();
+    }
+    const l = depsPourPeriodeActuelle();
+    const par = parCat(l);
+    const t = Math.round(l.reduce((s, x) => s + Number(x.montant), 0) * 100) / 100;
+    const n = l.length;
+    const seulMois = estMoisUnique();
+    const titrePeriode = seulMois ? libMois(perDebut.slice(0, 7)) : 'Du ' + dateFr(perDebut) + ' au ' + dateFr(perFin);
+
     if (!n) {
-      $('ana-contenu').innerHTML = '<div class="carte"><h3>Analyse de ' + libMois(mois) + '</h3><p class="note">Aucune dépense ce mois-ci. Ajoutez-en dans l’onglet Dépenses pour voir apparaître les graphiques.</p></div>';
+      $('ana-contenu').innerHTML = '<div class="carte"><h3>Analyse · ' + esc(titrePeriode) + '</h3><p class="note">Aucune dépense sur cette période.</p></div>';
       return;
     }
-    const b = bornes(mois);
-    const nbJ = Math.round((new Date(b[1]) - new Date(b[0])) / 86400000);
-    const jours = new Array(nbJ).fill(0);
-    l.forEach(x => { const j = +x.date.slice(8, 10) - 1; if (j >= 0 && j < nbJ) jours[j] += Number(x.montant); });
-    const ecoules = mois === aujourdhui().slice(0, 7) ? +aujourdhui().slice(8, 10) : nbJ;
+
     const plusGrosse = l.reduce((m, x) => x.montant > m.montant ? x : m, l[0]);
     const top = Object.keys(par).sort((a, c) => par[c] - par[a])[0];
-    const jMax = jours.indexOf(Math.max.apply(null, jours)) + 1;
-    const bud = d.budget;
-    $('ana-contenu').innerHTML =
-      '<div class="carte"><h3>Analyse de ' + libMois(mois) + '</h3>' +
+    const nbJ = nombreJoursPlage();
+    const nbM = nombreMoisCouverts();
+
+    let resumeHtml = '<div class="carte"><h3>Analyse · ' + esc(titrePeriode) + '</h3>' +
       '<p>Total dépensé : <b>' + argent(t) + '</b> (' + n + ' dépense' + (n > 1 ? 's' : '') + ')</p>' +
-      '<p>Moyenne par jour : <b>' + argent(t / ecoules) + '</b></p>' +
-      '<p>Rubrique principale : <b>' + esc(top) + '</b> (' + Math.round(par[top] / t * 100) + ' %)</p>' +
-      '<p>Plus grosse dépense : <b>' + argent(plusGrosse.montant) + '</b> · ' + esc(plusGrosse.desc) + '</p>' +
-      (bud > 0 ? '<div class="jauge s-' + statutBudget(bud, t) + '"><small>Budget utilisé : ' + Math.round(t / bud * 100) + ' %</small>' +
-        '<div class="barre"><i style="width:' + Math.min(100, t / bud * 100) + '%"></i></div></div>' : '') +
-      '</div>' +
+      '<p>Moyenne par jour : <b>' + argent(t / nbJ) + '</b></p>';
+
+    if (seulMois) {
+      const bud = budgetPourPeriodeActuelle();
+      const reste = Math.round((bud - t) * 100) / 100;
+      resumeHtml += '<p>Budget du mois : <b>' + argent(bud) + '</b>' + (bud > 0 ? ' · Reste : <b>' + argent(reste) + '</b>' : '') + '</p>';
+      if (bud > 0) {
+        resumeHtml += '<div class="jauge s-' + statutBudget(bud, t) + '"><small>Budget utilisé : ' + Math.round(t / bud * 100) + ' %</small>' +
+          '<div class="barre"><i style="width:' + Math.min(100, t / bud * 100) + '%"></i></div></div>';
+      }
+    } else {
+      resumeHtml += '<p>Moyenne par mois (' + nbM + ' mois couverts) : <b>' + argent(t / nbM) + '</b></p>';
+    }
+
+    resumeHtml += '<p>Rubrique principale : <b>' + esc(top) + '</b> (' + Math.round(par[top] / t * 100) + ' %)</p>' +
+      '<p>Plus grosse dépense : <b>' + argent(plusGrosse.montant) + '</b> · ' + esc(plusGrosse.desc) + ' (' + dateFr(plusGrosse.date) + ')</p></div>';
+
+    const vueMensuelle = !seulMois && nbJ > 45;
+    const serie = vueMensuelle ? serieMoisPlage(l, perDebut, perFin) : serieJoursPlage(l, perDebut, perFin);
+    const pointMax = serie.reduce((best, item) => item.val > best.val ? item : best, serie[0]);
+    const libMax = vueMensuelle
+      ? 'Mois le plus chargé : <b>' + esc(pointMax.detail) + '</b> (' + argent(pointMax.val) + ')'
+      : 'Jour le plus chargé : <b>' + esc(pointMax.detail) + '</b> (' + argent(pointMax.val) + ')';
+
+    $('ana-contenu').innerHTML = resumeHtml +
       '<div class="carte"><h3>Répartition par rubrique</h3>' + donut(par, t) + '</div>' +
-      '<div class="carte"><h3>Dépenses par jour</h3>' + barresJours(jours) +
-      '<p class="note">Jour le plus chargé : le ' + jMax + ' (' + argent(jours[jMax - 1]) + ')</p></div>';
+      '<div class="carte"><h3>' + (vueMensuelle ? 'Dépenses par mois' : 'Dépenses par jour') + '</h3>' + barresSeries(serie) +
+      '<p class="note">' + libMax + '</p></div>';
   }
 
   // ---------- Actions ----------
@@ -1482,7 +1848,40 @@
   $('pal-uni').addEventListener('click', choisirTheme);
   $('pal-deg').addEventListener('click', choisirTheme);
 
-  // ---------- Rapport ----------
+  // ---------- Rapport (Mois unique vs Plage multi-mois) ----------
+  function renderRapport() {
+    if (!perDebut || !perFin) {
+      const p = calculerPlageRapide(modePeriode);
+      perDebut = p.debut;
+      perFin = p.fin;
+    }
+    const l = depsPourPeriodeActuelle();
+    const par = parCat(l);
+    const t = Math.round(l.reduce((s, x) => s + Number(x.montant), 0) * 100) / 100;
+    const seulMois = estMoisUnique();
+    const titre = seulMois
+      ? libMois(perDebut.slice(0, 7)) + ' (Mois unique)'
+      : 'Du ' + dateFr(perDebut) + ' au ' + dateFr(perFin) + ' (' + nombreMoisCouverts() + ' mois)';
+
+    let resume = '<h3>' + esc(titre) + '</h3>';
+    if (seulMois) {
+      const b = budgetPourPeriodeActuelle();
+      const r = Math.round((b - t) * 100) / 100;
+      resume += '<p>Budget : <b>' + argent(b) + '</b></p><p>Dépensé : <b>' + argent(t) + '</b></p><p>Reste : <b>' + argent(r) + '</b></p>';
+    } else {
+      const nbM = nombreMoisCouverts();
+      resume += '<p>Cumul dépensé : <b>' + argent(t) + '</b></p>' +
+        '<p>Moyenne mensuelle : <b>' + argent(t / nbM) + '</b></p>' +
+        '<p>Moyenne journalière : <b>' + argent(t / nombreJoursPlage()) + '</b></p>';
+    }
+    resume += '<p>Nombre de dépenses : <b>' + l.length + '</b></p>';
+    if (Object.keys(par).length) {
+      resume += '<hr>' + Object.keys(par).map(k => '<p>' + esc(k) + ' : <b>' + argent(par[k]) + '</b></p>').join('');
+    }
+    $('rap-contenu').innerHTML = resume;
+    $('rap-dl').textContent = seulMois ? 'Télécharger le rapport du mois' : 'Télécharger le rapport de la période';
+  }
+
   function telecharger(nom, contenu) {
     const blob = new Blob(['\ufeff' + contenu], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -1493,35 +1892,57 @@
   }
 
   $('rap-dl').onclick = () => {
-    majVue();
+    if (!perDebut || !perFin) {
+      const p = calculerPlageRapide(modePeriode);
+      perDebut = p.debut;
+      perFin = p.fin;
+    }
     const dev = infoDevise();
-    const l = d.depenses.slice().sort((a, b) => a.date.localeCompare(b.date));
-    const b = d.budget, t = totalMois(), par = parCat(l);
+    const l = depsPourPeriodeActuelle().slice().sort((a, b) => a.date.localeCompare(b.date));
+    const t = Math.round(l.reduce((s, x) => s + Number(x.montant), 0) * 100) / 100;
+    const par = parCat(l);
+    const seulMois = estMoisUnique();
+
     const cel = v => {
       if (typeof v === 'number') return v;
       let s = String(v);
       if (/^[=+\-@]/.test(s)) s = "'" + s;
       return '"' + s.replace(/"/g, '""') + '"';
     };
-    const noms = catsListe().slice();
-    Object.keys(par).forEach(k => { if (!noms.includes(k)) noms.push(k); });
-    const lignes = [
-      ['Rapport mensuel - WariPlan'],
+
+    const entete = [
+      [seulMois ? 'Rapport mensuel - WariPlan' : 'Rapport de période - WariPlan'],
       ['Utilisateur', (d.prenom || '') + ' (' + (user.email || '') + ')'],
-      ['Mois', libMois(mois)],
-      ['Devise', dev.nom],
-      ['Budget (' + dev.unite + ')', b],
-      ['Total dépensé (' + dev.unite + ')', t],
-      ['Reste (' + dev.unite + ')', Math.round((b - t) * 100) / 100],
-      [],
-      ['Date', 'Description', 'Rubrique', 'Montant (' + dev.unite + ')']
-    ].concat(
+      ['Période', seulMois ? libMois(perDebut.slice(0, 7)) : ('Du ' + dateFr(perDebut) + ' au ' + dateFr(perFin))],
+      ['Devise', dev.nom]
+    ];
+
+    if (seulMois) {
+      const b = budgetPourPeriodeActuelle();
+      entete.push(['Budget (' + dev.unite + ')', b]);
+      entete.push(['Total dépensé (' + dev.unite + ')', t]);
+      entete.push(['Reste (' + dev.unite + ')', Math.round((b - t) * 100) / 100]);
+    } else {
+      const nbM = nombreMoisCouverts();
+      entete.push(['Total dépensé (' + dev.unite + ')', t]);
+      entete.push(['Moyenne mensuelle (' + dev.unite + ')', Math.round((t / nbM) * 100) / 100]);
+      entete.push(['Moyenne journalière (' + dev.unite + ')', Math.round((t / nombreJoursPlage()) * 100) / 100]);
+    }
+
+    const lignes = entete.concat(
+      [[]],
+      [['Date', 'Description', 'Rubrique', 'Montant (' + dev.unite + ')']],
       l.map(x => [dateFr(x.date), x.desc, x.cat, x.montant]),
-      [[], ['Rubrique', 'Budget (' + dev.unite + ')', 'Dépensé (' + dev.unite + ')', 'Reste (' + dev.unite + ')']],
-      noms.filter(k => par[k] || d.budrub[k]).map(k => [k, d.budrub[k] || 0, par[k] || 0, Math.round(((d.budrub[k] || 0) - (par[k] || 0)) * 100) / 100])
+      [[]],
+      [['Rubrique', 'Dépensé (' + dev.unite + ')']],
+      Object.keys(par).map(k => [k, par[k]])
     );
+
     const csv = lignes.map(r => r.map(cel).join(';')).join('\r\n');
-    telecharger('rapport-' + mois + '.csv', csv);
+    const nomFichier = seulMois
+      ? 'rapport-' + perDebut.slice(0, 7) + '.csv'
+      : 'rapport-' + perDebut + '_' + perFin + '.csv';
+    telecharger(nomFichier, csv);
   };
 
   // ---------- Réclamations ----------
