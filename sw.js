@@ -1,4 +1,4 @@
-const CACHE = 'wariplan-v7';
+const CACHE = 'wariplan-v8';
 const FILES = [
   './',
   'index.html',
@@ -17,7 +17,6 @@ self.addEventListener('install', (e) => {
           })
         )
       );
-      // Tentative d'ajouter la lib Supabase SANS bloquer l'installation
       try {
         await cache.add(LIB);
       } catch (err) {
@@ -40,17 +39,14 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
 
-  // Gestion de la lib Supabase
   if (url.href === LIB) {
     e.respondWith(
       caches.match(e.request).then((r) => r || fetch(e.request))
     );
     return;
   }
-  // Tous les appels externes (Supabase API, Wave) passent par le réseau
   if (url.origin !== location.origin) return;
 
-  // Stratégie pour les fichiers de l'application : réseau d'abord puis cache
   e.respondWith(
     fetch(e.request)
       .then((r) => {
