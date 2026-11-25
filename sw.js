@@ -1,5 +1,10 @@
-const CACHE = 'depenses-v6';
-const FILES = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'wariplan-v6';
+const FILES = [
+  './',
+  'index.html',
+  'manifest.json',
+  'wariplan-icon.png'
+];
 const LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.93.0';
 
 self.addEventListener('install', e => {
